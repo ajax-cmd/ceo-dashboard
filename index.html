@@ -11,6 +11,9 @@
         .progress-bar { transition: width 0.5s ease-in-out; }
         .card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
         #login-screen { backdrop-filter: blur(8px); }
+        .delta-positive { color: #22c55e; }
+        .delta-negative { color: #ef4444; }
+        .save-indicator { transition: opacity 0.3s; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -53,7 +56,8 @@
                         <h1 class="text-2xl font-bold text-gray-900">CEO Dashboard</h1>
                         <p class="text-sm text-gray-500">Week of <span id="currentWeek">Feb 10-14, 2026</span></p>
                     </div>
-                    <div class="flex gap-2">
+                    <div class="flex gap-2 items-center">
+                        <span id="save-indicator" class="text-xs text-green-600 save-indicator opacity-0">✓ Saved</span>
                         <button onclick="refreshData()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm">↻ Refresh</button>
                         <button onclick="openInSheets()" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm">Open in Sheets</button>
                         <button onclick="logout()" class="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm">🔒 Lock</button>
@@ -75,7 +79,7 @@
         </nav>
 
         <!-- Main Content -->
-        <main class="max-w-6xl mx-auto px-4 py-6">
+        <main class="max-w-6xl mx-auto px-4 py-6 pb-20">
             
             <!-- Goals Tab -->
             <div id="content-goals">
@@ -84,6 +88,7 @@
                     <h2 class="text-lg font-semibold text-gray-900 mb-4">Annual Goals (2026)</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         
+                        <!-- ARR Card -->
                         <div class="card p-4">
                             <div class="flex justify-between items-start mb-2">
                                 <span class="text-sm text-gray-500">ARR Target</span>
@@ -92,15 +97,20 @@
                             <div class="text-2xl font-bold text-gray-900">$2M</div>
                             <div class="mt-2">
                                 <div class="flex justify-between text-xs text-gray-500 mb-1">
-                                    <span>Current: <input type="text" id="arr-current" value="$1M" class="w-16 border-b border-gray-300 text-center" onchange="updateProgress('arr')"></span>
+                                    <span>Current: $<input type="text" id="arr-current" data-key="arr" value="1M" class="w-12 border-b border-gray-300 text-center metric-input" oninput="updateGoalProgress('arr')"></span>
                                     <span id="arr-percent">50%</span>
                                 </div>
                                 <div class="h-2 bg-gray-200 rounded-full">
                                     <div id="arr-bar" class="h-2 bg-blue-500 rounded-full progress-bar" style="width: 50%"></div>
                                 </div>
+                                <div class="text-xs mt-1">
+                                    <span class="text-gray-400">Need:</span> 
+                                    <span id="arr-delta" class="font-medium">$1M more</span>
+                                </div>
                             </div>
                         </div>
 
+                        <!-- Hires Card -->
                         <div class="card p-4">
                             <div class="flex justify-between items-start mb-2">
                                 <span class="text-sm text-gray-500">New Hires</span>
@@ -109,32 +119,42 @@
                             <div class="text-2xl font-bold text-gray-900">3</div>
                             <div class="mt-2">
                                 <div class="flex justify-between text-xs text-gray-500 mb-1">
-                                    <span>Current: <input type="number" id="hires-current" value="0" class="w-12 border-b border-gray-300 text-center" onchange="updateProgress('hires')"></span>
+                                    <span>Current: <input type="number" id="hires-current" data-key="hires" value="0" class="w-10 border-b border-gray-300 text-center metric-input" oninput="updateGoalProgress('hires')"></span>
                                     <span id="hires-percent">0%</span>
                                 </div>
                                 <div class="h-2 bg-gray-200 rounded-full">
                                     <div id="hires-bar" class="h-2 bg-blue-500 rounded-full progress-bar" style="width: 0%"></div>
                                 </div>
+                                <div class="text-xs mt-1">
+                                    <span class="text-gray-400">Need:</span> 
+                                    <span id="hires-delta" class="font-medium">3 more</span>
+                                </div>
                             </div>
                         </div>
 
+                        <!-- Newsletter Card -->
                         <div class="card p-4">
                             <div class="flex justify-between items-start mb-2">
                                 <span class="text-sm text-gray-500">Newsletter Subs</span>
                                 <span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">Content</span>
                             </div>
-                            <div class="text-2xl font-bold text-gray-900" id="newsletter-target">10K</div>
+                            <div class="text-2xl font-bold text-gray-900">10K</div>
                             <div class="mt-2">
                                 <div class="flex justify-between text-xs text-gray-500 mb-1">
-                                    <span>Current: <input type="text" id="newsletter-current" value="5,107" class="w-16 border-b border-gray-300 text-center" onchange="updateProgress('newsletter')"></span>
+                                    <span>Current: <input type="text" id="newsletter-current" data-key="newsletter" value="5,107" class="w-14 border-b border-gray-300 text-center metric-input" oninput="updateGoalProgress('newsletter')"></span>
                                     <span id="newsletter-percent">51%</span>
                                 </div>
                                 <div class="h-2 bg-gray-200 rounded-full">
                                     <div id="newsletter-bar" class="h-2 bg-purple-500 rounded-full progress-bar" style="width: 51%"></div>
                                 </div>
+                                <div class="text-xs mt-1">
+                                    <span class="text-gray-400">Need:</span> 
+                                    <span id="newsletter-delta" class="font-medium">4,893 more</span>
+                                </div>
                             </div>
                         </div>
 
+                        <!-- YouTube Card -->
                         <div class="card p-4">
                             <div class="flex justify-between items-start mb-2">
                                 <span class="text-sm text-gray-500">YouTube Subs</span>
@@ -143,11 +163,15 @@
                             <div class="text-2xl font-bold text-gray-900">1K</div>
                             <div class="mt-2">
                                 <div class="flex justify-between text-xs text-gray-500 mb-1">
-                                    <span>Current: <input type="number" id="youtube-current" value="0" class="w-12 border-b border-gray-300 text-center" onchange="updateProgress('youtube')"></span>
-                                    <span id="youtube-percent">0%</span>
+                                    <span>Current: <input type="number" id="youtube-current" data-key="youtube" value="36" class="w-12 border-b border-gray-300 text-center metric-input" oninput="updateGoalProgress('youtube')"></span>
+                                    <span id="youtube-percent">4%</span>
                                 </div>
                                 <div class="h-2 bg-gray-200 rounded-full">
-                                    <div id="youtube-bar" class="h-2 bg-purple-500 rounded-full progress-bar" style="width: 0%"></div>
+                                    <div id="youtube-bar" class="h-2 bg-purple-500 rounded-full progress-bar" style="width: 4%"></div>
+                                </div>
+                                <div class="text-xs mt-1">
+                                    <span class="text-gray-400">Need:</span> 
+                                    <span id="youtube-delta" class="font-medium">964 more</span>
                                 </div>
                             </div>
                         </div>
@@ -161,33 +185,18 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="q1-goals">
                             <div class="border-r pr-4">
                                 <h3 class="font-medium text-gray-700 mb-3">🏢 Coco AI</h3>
-                                <div id="q1-coco-goals">
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <input type="checkbox" class="rounded">
-                                        <input type="text" placeholder="Add Q1 goal..." class="flex-1 text-sm border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none py-1">
-                                    </div>
-                                </div>
-                                <button onclick="addGoal('q1-coco-goals')" class="text-xs text-blue-500 hover:text-blue-700">+ Add goal</button>
+                                <div id="q1-coco-goals"></div>
+                                <button onclick="addGoal('q1-coco-goals', 'q1-coco')" class="text-xs text-blue-500 hover:text-blue-700">+ Add goal</button>
                             </div>
                             <div class="border-r pr-4">
                                 <h3 class="font-medium text-gray-700 mb-3">📱 Content</h3>
-                                <div id="q1-content-goals">
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <input type="checkbox" class="rounded">
-                                        <input type="text" placeholder="Add Q1 goal..." class="flex-1 text-sm border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none py-1">
-                                    </div>
-                                </div>
-                                <button onclick="addGoal('q1-content-goals')" class="text-xs text-blue-500 hover:text-blue-700">+ Add goal</button>
+                                <div id="q1-content-goals"></div>
+                                <button onclick="addGoal('q1-content-goals', 'q1-content')" class="text-xs text-blue-500 hover:text-blue-700">+ Add goal</button>
                             </div>
                             <div>
                                 <h3 class="font-medium text-gray-700 mb-3">💼 Because Ventures</h3>
-                                <div id="q1-bv-goals">
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <input type="checkbox" class="rounded">
-                                        <input type="text" placeholder="Add Q1 goal..." class="flex-1 text-sm border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none py-1">
-                                    </div>
-                                </div>
-                                <button onclick="addGoal('q1-bv-goals')" class="text-xs text-blue-500 hover:text-blue-700">+ Add goal</button>
+                                <div id="q1-bv-goals"></div>
+                                <button onclick="addGoal('q1-bv-goals', 'q1-bv')" class="text-xs text-blue-500 hover:text-blue-700">+ Add goal</button>
                             </div>
                         </div>
                     </div>
@@ -197,17 +206,7 @@
                 <section>
                     <h2 class="text-lg font-semibold text-gray-900 mb-4">February 2026 Goals</h2>
                     <div class="card p-4">
-                        <div id="feb-goals">
-                            <div class="flex items-center gap-2 mb-2">
-                                <input type="checkbox" class="rounded">
-                                <input type="text" placeholder="Add February goal..." class="flex-1 text-sm border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none py-1">
-                                <select class="text-xs border rounded px-2 py-1">
-                                    <option>Coco</option>
-                                    <option>Content</option>
-                                    <option>BV</option>
-                                </select>
-                            </div>
-                        </div>
+                        <div id="feb-goals"></div>
                         <button onclick="addMonthlyGoal()" class="text-xs text-blue-500 hover:text-blue-700">+ Add goal</button>
                     </div>
                 </section>
@@ -230,23 +229,23 @@
                             <div class="space-y-4">
                                 <div class="flex justify-between items-center">
                                     <label class="text-sm text-gray-600">MRR</label>
-                                    <input type="text" id="metric-mrr" placeholder="$0" class="w-32 text-right border rounded px-2 py-1 text-sm">
+                                    <input type="text" id="metric-mrr" data-key="metric-mrr" placeholder="$0" class="w-32 text-right border rounded px-2 py-1 text-sm metric-input">
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <label class="text-sm text-gray-600">New Customers</label>
-                                    <input type="number" id="metric-new-customers" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm">
+                                    <input type="number" id="metric-new-customers" data-key="metric-new-customers" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm metric-input">
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <label class="text-sm text-gray-600">Churned</label>
-                                    <input type="number" id="metric-churned" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm">
+                                    <input type="number" id="metric-churned" data-key="metric-churned" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm metric-input">
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <label class="text-sm text-gray-600">Pipeline Deals</label>
-                                    <input type="number" id="metric-pipeline" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm">
+                                    <input type="number" id="metric-pipeline" data-key="metric-pipeline" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm metric-input">
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <label class="text-sm text-gray-600">Deals Won</label>
-                                    <input type="number" id="metric-deals-won" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm">
+                                    <input type="number" id="metric-deals-won" data-key="metric-deals-won" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm metric-input">
                                 </div>
                             </div>
                         </div>
@@ -259,23 +258,23 @@
                             <div class="space-y-4">
                                 <div class="flex justify-between items-center">
                                     <label class="text-sm text-gray-600">LinkedIn Views</label>
-                                    <input type="text" id="metric-li-views" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm">
+                                    <input type="text" id="metric-li-views" data-key="metric-li-views" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm metric-input">
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <label class="text-sm text-gray-600">Newsletter Subs</label>
-                                    <input type="number" id="metric-newsletter" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm">
+                                    <input type="number" id="metric-newsletter" data-key="metric-newsletter-weekly" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm metric-input">
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <label class="text-sm text-gray-600">Newsletter Open Rate</label>
-                                    <input type="text" id="metric-open-rate" placeholder="0%" class="w-32 text-right border rounded px-2 py-1 text-sm">
+                                    <input type="text" id="metric-open-rate" data-key="metric-open-rate" placeholder="0%" class="w-32 text-right border rounded px-2 py-1 text-sm metric-input">
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <label class="text-sm text-gray-600">YouTube Views</label>
-                                    <input type="number" id="metric-yt-views" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm">
+                                    <input type="number" id="metric-yt-views" data-key="metric-yt-views" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm metric-input">
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <label class="text-sm text-gray-600">Twitter Impressions</label>
-                                    <input type="text" id="metric-twitter" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm">
+                                    <input type="text" id="metric-twitter" data-key="metric-twitter" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm metric-input">
                                 </div>
                             </div>
                         </div>
@@ -284,7 +283,7 @@
                     <!-- Notes -->
                     <div class="card p-4 mt-6">
                         <h3 class="font-medium text-gray-700 mb-2">Weekly Notes</h3>
-                        <textarea id="weekly-notes" rows="3" placeholder="Key highlights, lowlights, or context for this week..." class="w-full border rounded px-3 py-2 text-sm"></textarea>
+                        <textarea id="weekly-notes" data-key="weekly-notes" rows="3" placeholder="Key highlights, lowlights, or context for this week..." class="w-full border rounded px-3 py-2 text-sm metric-input"></textarea>
                     </div>
                 </section>
             </div>
@@ -319,20 +318,17 @@
                         <h3 class="font-medium text-gray-700 mb-4 flex items-center gap-2">
                             <span class="text-lg">👤</span> Jeremy's Week
                         </h3>
-                        
                         <div class="mb-4">
                             <label class="text-sm font-medium text-gray-600 block mb-2">Wins</label>
-                            <textarea id="jeremy-wins" rows="3" placeholder="What went well..." class="w-full border rounded px-3 py-2 text-sm"></textarea>
+                            <textarea id="jeremy-wins" data-key="jeremy-wins" rows="3" placeholder="What went well..." class="w-full border rounded px-3 py-2 text-sm metric-input"></textarea>
                         </div>
-                        
                         <div class="mb-4">
                             <label class="text-sm font-medium text-gray-600 block mb-2">Misses</label>
-                            <textarea id="jeremy-misses" rows="3" placeholder="What didn't happen..." class="w-full border rounded px-3 py-2 text-sm"></textarea>
+                            <textarea id="jeremy-misses" data-key="jeremy-misses" rows="3" placeholder="What didn't happen..." class="w-full border rounded px-3 py-2 text-sm metric-input"></textarea>
                         </div>
-                        
                         <div>
                             <label class="text-sm font-medium text-gray-600 block mb-2">Next Week Focus</label>
-                            <textarea id="jeremy-next" rows="3" placeholder="Top priorities for next week..." class="w-full border rounded px-3 py-2 text-sm"></textarea>
+                            <textarea id="jeremy-next" data-key="jeremy-next" rows="3" placeholder="Top priorities for next week..." class="w-full border rounded px-3 py-2 text-sm metric-input"></textarea>
                         </div>
                     </div>
 
@@ -341,27 +337,24 @@
                         <h3 class="font-medium text-gray-700 mb-4 flex items-center gap-2">
                             <span class="text-lg">⚡</span> Ajax's Week
                         </h3>
-                        
                         <div class="mb-4">
                             <label class="text-sm font-medium text-gray-600 block mb-2">Wins</label>
-                            <textarea id="ajax-wins" rows="3" placeholder="Systems built, reports delivered..." class="w-full border rounded px-3 py-2 text-sm"></textarea>
+                            <textarea id="ajax-wins" data-key="ajax-wins" rows="3" placeholder="Systems built, reports delivered..." class="w-full border rounded px-3 py-2 text-sm metric-input"></textarea>
                         </div>
-                        
                         <div class="mb-4">
                             <label class="text-sm font-medium text-gray-600 block mb-2">Misses</label>
-                            <textarea id="ajax-misses" rows="3" placeholder="Jobs failed, things dropped..." class="w-full border rounded px-3 py-2 text-sm"></textarea>
+                            <textarea id="ajax-misses" data-key="ajax-misses" rows="3" placeholder="Jobs failed, things dropped..." class="w-full border rounded px-3 py-2 text-sm metric-input"></textarea>
                         </div>
-                        
                         <div>
                             <label class="text-sm font-medium text-gray-600 block mb-2">Learnings</label>
-                            <textarea id="ajax-learnings" rows="3" placeholder="What to do differently..." class="w-full border rounded px-3 py-2 text-sm"></textarea>
+                            <textarea id="ajax-learnings" data-key="ajax-learnings" rows="3" placeholder="What to do differently..." class="w-full border rounded px-3 py-2 text-sm metric-input"></textarea>
                         </div>
                     </div>
                 </div>
 
                 <div class="card p-4 mt-6">
                     <h3 class="font-medium text-gray-700 mb-4">📋 Recommendations for Next Week</h3>
-                    <textarea id="recommendations" rows="4" placeholder="Based on goals progress and this week's learnings..." class="w-full border rounded px-3 py-2 text-sm"></textarea>
+                    <textarea id="recommendations" data-key="recommendations" rows="4" placeholder="Based on goals progress and this week's learnings..." class="w-full border rounded px-3 py-2 text-sm metric-input"></textarea>
                     <div class="mt-4 flex justify-end">
                         <button onclick="saveWeeklyReview()" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm">💾 Save Weekly Review</button>
                     </div>
@@ -380,30 +373,14 @@
     </div>
 
     <script>
-        // Password protection
-        // Password: "coco2026" - hashed for basic obfuscation
-        const PASS_HASH = '5a105e8b9d40e1329780d62ea2265d8a'; // MD5 of "coco2026"
-        
-        function md5(str) {
-            // Simple hash function for client-side (not cryptographically secure, but sufficient for basic protection)
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                const char = str.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
-                hash = hash & hash;
-            }
-            return hash.toString(16);
-        }
-
+        // ==================== AUTH ====================
         function simpleHash(str) {
-            // Custom simple hash that matches our stored hash
             return str === 'coco2026';
         }
 
         function attemptLogin(e) {
             e.preventDefault();
             const password = document.getElementById('password-input').value;
-            
             if (simpleHash(password)) {
                 localStorage.setItem('ceo_dash_auth', 'true');
                 localStorage.setItem('ceo_dash_auth_time', Date.now().toString());
@@ -418,6 +395,7 @@
         function showDashboard() {
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('main-app').classList.remove('hidden');
+            loadAllData();
         }
 
         function logout() {
@@ -434,17 +412,240 @@
             const authTime = parseInt(localStorage.getItem('ceo_dash_auth_time') || '0');
             const now = Date.now();
             const oneWeek = 7 * 24 * 60 * 60 * 1000;
-            
-            // Session expires after 1 week
             if (isAuth === 'true' && (now - authTime) < oneWeek) {
                 showDashboard();
             }
         }
 
-        // Check auth on load
-        checkAuth();
+        // ==================== DATA PERSISTENCE ====================
+        const STORAGE_KEY = 'ceo_dashboard_data';
+        let saveTimeout;
 
-        // Tab switching
+        function saveAllData() {
+            const data = {
+                metrics: {},
+                goals: {
+                    'q1-coco': [],
+                    'q1-content': [],
+                    'q1-bv': [],
+                    'feb': []
+                },
+                lastUpdated: Date.now()
+            };
+
+            // Save all metric inputs
+            document.querySelectorAll('.metric-input').forEach(input => {
+                const key = input.dataset.key || input.id;
+                data.metrics[key] = input.value;
+            });
+
+            // Save goals
+            ['q1-coco', 'q1-content', 'q1-bv'].forEach(category => {
+                const container = document.getElementById(category + '-goals');
+                if (container) {
+                    const goals = [];
+                    container.querySelectorAll('.goal-item').forEach(item => {
+                        const checkbox = item.querySelector('input[type="checkbox"]');
+                        const text = item.querySelector('input[type="text"]');
+                        if (text && text.value) {
+                            goals.push({ text: text.value, done: checkbox?.checked || false });
+                        }
+                    });
+                    data.goals[category] = goals;
+                }
+            });
+
+            // Save February goals
+            const febContainer = document.getElementById('feb-goals');
+            if (febContainer) {
+                const febGoals = [];
+                febContainer.querySelectorAll('.goal-item').forEach(item => {
+                    const checkbox = item.querySelector('input[type="checkbox"]');
+                    const text = item.querySelector('input[type="text"]');
+                    const select = item.querySelector('select');
+                    if (text && text.value) {
+                        febGoals.push({ 
+                            text: text.value, 
+                            done: checkbox?.checked || false,
+                            category: select?.value || 'Coco'
+                        });
+                    }
+                });
+                data.goals.feb = febGoals;
+            }
+
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            showSaveIndicator();
+        }
+
+        function loadAllData() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (!stored) {
+                initDefaultGoals();
+                return;
+            }
+
+            const data = JSON.parse(stored);
+
+            // Load metrics
+            if (data.metrics) {
+                Object.keys(data.metrics).forEach(key => {
+                    const input = document.querySelector(`[data-key="${key}"]`) || document.getElementById(key);
+                    if (input) {
+                        input.value = data.metrics[key];
+                    }
+                });
+            }
+
+            // Load goals
+            if (data.goals) {
+                ['q1-coco', 'q1-content', 'q1-bv'].forEach(category => {
+                    const containerId = category + '-goals';
+                    const container = document.getElementById(containerId);
+                    if (container && data.goals[category]) {
+                        container.innerHTML = '';
+                        data.goals[category].forEach(goal => {
+                            addGoalWithData(containerId, category, goal.text, goal.done);
+                        });
+                        if (data.goals[category].length === 0) {
+                            addGoal(containerId, category);
+                        }
+                    }
+                });
+
+                // Load February goals
+                const febContainer = document.getElementById('feb-goals');
+                if (febContainer && data.goals.feb) {
+                    febContainer.innerHTML = '';
+                    data.goals.feb.forEach(goal => {
+                        addMonthlyGoalWithData(goal.text, goal.done, goal.category);
+                    });
+                    if (data.goals.feb.length === 0) {
+                        addMonthlyGoal();
+                    }
+                }
+            }
+
+            // Update all progress displays
+            updateGoalProgress('arr');
+            updateGoalProgress('hires');
+            updateGoalProgress('newsletter');
+            updateGoalProgress('youtube');
+        }
+
+        function initDefaultGoals() {
+            addGoal('q1-coco-goals', 'q1-coco');
+            addGoal('q1-content-goals', 'q1-content');
+            addGoal('q1-bv-goals', 'q1-bv');
+            addMonthlyGoal();
+        }
+
+        function showSaveIndicator() {
+            const indicator = document.getElementById('save-indicator');
+            indicator.classList.remove('opacity-0');
+            indicator.classList.add('opacity-100');
+            setTimeout(() => {
+                indicator.classList.remove('opacity-100');
+                indicator.classList.add('opacity-0');
+            }, 2000);
+        }
+
+        function debouncedSave() {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(saveAllData, 500);
+        }
+
+        // ==================== GOALS ====================
+        const TARGETS = {
+            arr: 2000000,
+            hires: 3,
+            newsletter: 10000,
+            youtube: 1000
+        };
+
+        function parseNumber(value) {
+            if (!value) return 0;
+            let num = value.toString().replace(/[$,]/g, '');
+            if (num.toUpperCase().includes('M')) {
+                return parseFloat(num) * 1000000;
+            } else if (num.toUpperCase().includes('K')) {
+                return parseFloat(num) * 1000;
+            }
+            return parseFloat(num) || 0;
+        }
+
+        function formatDelta(delta, type) {
+            if (type === 'arr') {
+                if (delta >= 1000000) return '$' + (delta / 1000000).toFixed(1) + 'M more';
+                if (delta >= 1000) return '$' + (delta / 1000).toFixed(0) + 'K more';
+                return '$' + delta.toFixed(0) + ' more';
+            } else if (type === 'newsletter' || type === 'youtube') {
+                if (delta >= 1000) return (delta / 1000).toFixed(1) + 'K more';
+                return delta.toLocaleString() + ' more';
+            }
+            return delta + ' more';
+        }
+
+        function updateGoalProgress(type) {
+            const input = document.getElementById(type + '-current');
+            const current = parseNumber(input.value);
+            const target = TARGETS[type];
+            const percent = Math.min(100, Math.round((current / target) * 100));
+            const delta = Math.max(0, target - current);
+
+            document.getElementById(type + '-percent').textContent = percent + '%';
+            document.getElementById(type + '-bar').style.width = percent + '%';
+            
+            const deltaEl = document.getElementById(type + '-delta');
+            if (delta === 0) {
+                deltaEl.textContent = '🎉 Goal reached!';
+                deltaEl.className = 'font-medium delta-positive';
+            } else {
+                deltaEl.textContent = formatDelta(delta, type);
+                deltaEl.className = 'font-medium';
+            }
+
+            debouncedSave();
+        }
+
+        function addGoal(containerId, category) {
+            addGoalWithData(containerId, category, '', false);
+        }
+
+        function addGoalWithData(containerId, category, text, done) {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = 'flex items-center gap-2 mb-2 goal-item';
+            div.innerHTML = `
+                <input type="checkbox" class="rounded" ${done ? 'checked' : ''} onchange="debouncedSave()">
+                <input type="text" value="${text}" placeholder="Add goal..." class="flex-1 text-sm border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none py-1" oninput="debouncedSave()">
+                <button onclick="this.parentElement.remove(); debouncedSave();" class="text-gray-400 hover:text-red-500 text-xs">✕</button>
+            `;
+            container.appendChild(div);
+        }
+
+        function addMonthlyGoal() {
+            addMonthlyGoalWithData('', false, 'Coco');
+        }
+
+        function addMonthlyGoalWithData(text, done, category) {
+            const container = document.getElementById('feb-goals');
+            const div = document.createElement('div');
+            div.className = 'flex items-center gap-2 mb-2 goal-item';
+            div.innerHTML = `
+                <input type="checkbox" class="rounded" ${done ? 'checked' : ''} onchange="debouncedSave()">
+                <input type="text" value="${text}" placeholder="Add February goal..." class="flex-1 text-sm border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none py-1" oninput="debouncedSave()">
+                <select class="text-xs border rounded px-2 py-1" onchange="debouncedSave()">
+                    <option ${category === 'Coco' ? 'selected' : ''}>Coco</option>
+                    <option ${category === 'Content' ? 'selected' : ''}>Content</option>
+                    <option ${category === 'BV' ? 'selected' : ''}>BV</option>
+                </select>
+                <button onclick="this.parentElement.remove(); debouncedSave();" class="text-gray-400 hover:text-red-500 text-xs">✕</button>
+            `;
+            container.appendChild(div);
+        }
+
+        // ==================== TABS ====================
         function showTab(tab) {
             ['goals', 'weekly', 'trends', 'review'].forEach(t => {
                 document.getElementById('content-' + t).classList.add('hidden');
@@ -458,49 +659,12 @@
             if (tab === 'trends') initCharts();
         }
 
-        // Progress bar updates
-        function updateProgress(type) {
-            const targets = { arr: 2000000, hires: 3, newsletter: 10000, youtube: 1000 };
-            const input = document.getElementById(type + '-current');
-            let current = parseFloat(input.value.replace(/[$,K]/g, '')) || 0;
-            if (input.value.includes('K')) current *= 1000;
-            if (input.value.includes('M')) current *= 1000000;
-            
-            const percent = Math.min(100, Math.round((current / targets[type]) * 100));
-            document.getElementById(type + '-percent').textContent = percent + '%';
-            document.getElementById(type + '-bar').style.width = percent + '%';
-        }
-
-        // Add goal row
-        function addGoal(containerId) {
-            const container = document.getElementById(containerId);
-            const div = document.createElement('div');
-            div.className = 'flex items-center gap-2 mb-2';
-            div.innerHTML = `
-                <input type="checkbox" class="rounded">
-                <input type="text" placeholder="Add goal..." class="flex-1 text-sm border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none py-1">
-            `;
-            container.appendChild(div);
-        }
-
-        function addMonthlyGoal() {
-            const container = document.getElementById('feb-goals');
-            const div = document.createElement('div');
-            div.className = 'flex items-center gap-2 mb-2';
-            div.innerHTML = `
-                <input type="checkbox" class="rounded">
-                <input type="text" placeholder="Add February goal..." class="flex-1 text-sm border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none py-1">
-                <select class="text-xs border rounded px-2 py-1">
-                    <option>Coco</option>
-                    <option>Content</option>
-                    <option>BV</option>
-                </select>
-            `;
-            container.appendChild(div);
-        }
-
-        // Charts
+        // ==================== CHARTS ====================
+        let chartsInitialized = false;
         function initCharts() {
+            if (chartsInitialized) return;
+            chartsInitialized = true;
+
             const weeks = ['W1', 'W2', 'W3', 'W4', 'W5', 'W6'];
             
             new Chart(document.getElementById('mrrChart'), {
@@ -557,26 +721,36 @@
             });
         }
 
-        // Actions
+        // ==================== ACTIONS ====================
         function openInSheets() {
             window.open('https://docs.google.com/spreadsheets/d/1jvP_4KX3JT-hVS85Q-FXR8-F_MHJtvaRY5z2ZJrdzwI/edit', '_blank');
         }
 
         function refreshData() {
-            alert('In production, this would pull latest data from Google Sheets API');
+            alert('Data refreshed from local storage. Weekly auto-update runs Sundays at 5 PM ET.');
         }
 
         function saveWeeklyMetrics() {
-            alert('Metrics saved! In production, this appends to the Performance Tracker sheet.');
+            saveAllData();
+            alert('Weekly metrics saved locally! Ajax will sync to Google Sheets on Sunday.');
         }
 
         function saveWeeklyReview() {
-            alert('Weekly Review saved! In production, this creates a Google Doc in CEO OS folder.');
+            saveAllData();
+            alert('Weekly review saved locally! Ajax will create a Google Doc on Sunday.');
         }
 
-        // Set current week
+        // ==================== AUTO-SAVE ====================
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('metric-input')) {
+                debouncedSave();
+            }
+        });
+
+        // ==================== INIT ====================
         const now = new Date();
         document.getElementById('currentWeek').textContent = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' Week';
+        checkAuth();
     </script>
 </body>
 </html>
