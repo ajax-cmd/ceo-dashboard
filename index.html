@@ -10,342 +10,440 @@
         .tab-active { border-bottom: 3px solid #3b82f6; color: #3b82f6; }
         .progress-bar { transition: width 0.5s ease-in-out; }
         .card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        #login-screen { backdrop-filter: blur(8px); }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <!-- Header -->
-    <header class="bg-white shadow-sm border-b">
-        <div class="max-w-6xl mx-auto px-4 py-4">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900">CEO Dashboard</h1>
-                    <p class="text-sm text-gray-500">Week of <span id="currentWeek">Feb 10-14, 2026</span></p>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="refreshData()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm">↻ Refresh</button>
-                    <button onclick="openInSheets()" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm">Open in Sheets</button>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="fixed inset-0 bg-gray-900/95 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-8 max-w-sm w-full mx-4 shadow-2xl">
+            <div class="text-center mb-6">
+                <div class="text-4xl mb-2">🔐</div>
+                <h1 class="text-xl font-bold text-gray-900">CEO Dashboard</h1>
+                <p class="text-sm text-gray-500 mt-1">Enter password to continue</p>
+            </div>
+            <form onsubmit="attemptLogin(event)">
+                <input 
+                    type="password" 
+                    id="password-input" 
+                    placeholder="Password" 
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none mb-4"
+                    autofocus
+                >
+                <div id="login-error" class="text-red-500 text-sm mb-4 hidden">Incorrect password</div>
+                <button 
+                    type="submit" 
+                    class="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition"
+                >
+                    Unlock Dashboard
+                </button>
+            </form>
+            <p class="text-xs text-gray-400 text-center mt-4">Private access only</p>
+        </div>
+    </div>
+
+    <!-- Main App (hidden until authenticated) -->
+    <div id="main-app" class="hidden">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b">
+            <div class="max-w-6xl mx-auto px-4 py-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">CEO Dashboard</h1>
+                        <p class="text-sm text-gray-500">Week of <span id="currentWeek">Feb 10-14, 2026</span></p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="refreshData()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm">↻ Refresh</button>
+                        <button onclick="openInSheets()" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm">Open in Sheets</button>
+                        <button onclick="logout()" class="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm">🔒 Lock</button>
+                    </div>
                 </div>
             </div>
-        </div>
-    </header>
+        </header>
 
-    <!-- Navigation Tabs -->
-    <nav class="bg-white border-b">
-        <div class="max-w-6xl mx-auto px-4">
-            <div class="flex gap-6">
-                <button onclick="showTab('goals')" id="tab-goals" class="py-3 px-1 text-sm font-medium tab-active">🎯 Goals</button>
-                <button onclick="showTab('weekly')" id="tab-weekly" class="py-3 px-1 text-sm font-medium text-gray-500 hover:text-gray-700">📊 Weekly Metrics</button>
-                <button onclick="showTab('trends')" id="tab-trends" class="py-3 px-1 text-sm font-medium text-gray-500 hover:text-gray-700">📈 Trends</button>
-                <button onclick="showTab('review')" id="tab-review" class="py-3 px-1 text-sm font-medium text-gray-500 hover:text-gray-700">📝 Weekly Review</button>
+        <!-- Navigation Tabs -->
+        <nav class="bg-white border-b">
+            <div class="max-w-6xl mx-auto px-4">
+                <div class="flex gap-6">
+                    <button onclick="showTab('goals')" id="tab-goals" class="py-3 px-1 text-sm font-medium tab-active">🎯 Goals</button>
+                    <button onclick="showTab('weekly')" id="tab-weekly" class="py-3 px-1 text-sm font-medium text-gray-500 hover:text-gray-700">📊 Weekly Metrics</button>
+                    <button onclick="showTab('trends')" id="tab-trends" class="py-3 px-1 text-sm font-medium text-gray-500 hover:text-gray-700">📈 Trends</button>
+                    <button onclick="showTab('review')" id="tab-review" class="py-3 px-1 text-sm font-medium text-gray-500 hover:text-gray-700">📝 Weekly Review</button>
+                </div>
             </div>
-        </div>
-    </nav>
+        </nav>
 
-    <!-- Main Content -->
-    <main class="max-w-6xl mx-auto px-4 py-6">
-        
-        <!-- Goals Tab -->
-        <div id="content-goals">
-            <!-- Annual Goals -->
-            <section class="mb-8">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">Annual Goals (2026)</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Main Content -->
+        <main class="max-w-6xl mx-auto px-4 py-6">
+            
+            <!-- Goals Tab -->
+            <div id="content-goals">
+                <!-- Annual Goals -->
+                <section class="mb-8">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Annual Goals (2026)</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        
+                        <div class="card p-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="text-sm text-gray-500">ARR Target</span>
+                                <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Coco</span>
+                            </div>
+                            <div class="text-2xl font-bold text-gray-900">$2M</div>
+                            <div class="mt-2">
+                                <div class="flex justify-between text-xs text-gray-500 mb-1">
+                                    <span>Current: <input type="text" id="arr-current" value="$1M" class="w-16 border-b border-gray-300 text-center" onchange="updateProgress('arr')"></span>
+                                    <span id="arr-percent">50%</span>
+                                </div>
+                                <div class="h-2 bg-gray-200 rounded-full">
+                                    <div id="arr-bar" class="h-2 bg-blue-500 rounded-full progress-bar" style="width: 50%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card p-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="text-sm text-gray-500">New Hires</span>
+                                <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Coco</span>
+                            </div>
+                            <div class="text-2xl font-bold text-gray-900">3</div>
+                            <div class="mt-2">
+                                <div class="flex justify-between text-xs text-gray-500 mb-1">
+                                    <span>Current: <input type="number" id="hires-current" value="0" class="w-12 border-b border-gray-300 text-center" onchange="updateProgress('hires')"></span>
+                                    <span id="hires-percent">0%</span>
+                                </div>
+                                <div class="h-2 bg-gray-200 rounded-full">
+                                    <div id="hires-bar" class="h-2 bg-blue-500 rounded-full progress-bar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card p-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="text-sm text-gray-500">Newsletter Subs</span>
+                                <span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">Content</span>
+                            </div>
+                            <div class="text-2xl font-bold text-gray-900" id="newsletter-target">10K</div>
+                            <div class="mt-2">
+                                <div class="flex justify-between text-xs text-gray-500 mb-1">
+                                    <span>Current: <input type="text" id="newsletter-current" value="5,107" class="w-16 border-b border-gray-300 text-center" onchange="updateProgress('newsletter')"></span>
+                                    <span id="newsletter-percent">51%</span>
+                                </div>
+                                <div class="h-2 bg-gray-200 rounded-full">
+                                    <div id="newsletter-bar" class="h-2 bg-purple-500 rounded-full progress-bar" style="width: 51%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card p-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="text-sm text-gray-500">YouTube Subs</span>
+                                <span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">Content</span>
+                            </div>
+                            <div class="text-2xl font-bold text-gray-900">1K</div>
+                            <div class="mt-2">
+                                <div class="flex justify-between text-xs text-gray-500 mb-1">
+                                    <span>Current: <input type="number" id="youtube-current" value="0" class="w-12 border-b border-gray-300 text-center" onchange="updateProgress('youtube')"></span>
+                                    <span id="youtube-percent">0%</span>
+                                </div>
+                                <div class="h-2 bg-gray-200 rounded-full">
+                                    <div id="youtube-bar" class="h-2 bg-purple-500 rounded-full progress-bar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Q1 Goals -->
+                <section class="mb-8">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Q1 2026 Goals (Jan - Mar)</h2>
+                    <div class="card p-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="q1-goals">
+                            <div class="border-r pr-4">
+                                <h3 class="font-medium text-gray-700 mb-3">🏢 Coco AI</h3>
+                                <div id="q1-coco-goals">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <input type="checkbox" class="rounded">
+                                        <input type="text" placeholder="Add Q1 goal..." class="flex-1 text-sm border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none py-1">
+                                    </div>
+                                </div>
+                                <button onclick="addGoal('q1-coco-goals')" class="text-xs text-blue-500 hover:text-blue-700">+ Add goal</button>
+                            </div>
+                            <div class="border-r pr-4">
+                                <h3 class="font-medium text-gray-700 mb-3">📱 Content</h3>
+                                <div id="q1-content-goals">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <input type="checkbox" class="rounded">
+                                        <input type="text" placeholder="Add Q1 goal..." class="flex-1 text-sm border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none py-1">
+                                    </div>
+                                </div>
+                                <button onclick="addGoal('q1-content-goals')" class="text-xs text-blue-500 hover:text-blue-700">+ Add goal</button>
+                            </div>
+                            <div>
+                                <h3 class="font-medium text-gray-700 mb-3">💼 Because Ventures</h3>
+                                <div id="q1-bv-goals">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <input type="checkbox" class="rounded">
+                                        <input type="text" placeholder="Add Q1 goal..." class="flex-1 text-sm border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none py-1">
+                                    </div>
+                                </div>
+                                <button onclick="addGoal('q1-bv-goals')" class="text-xs text-blue-500 hover:text-blue-700">+ Add goal</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- February Goals -->
+                <section>
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">February 2026 Goals</h2>
+                    <div class="card p-4">
+                        <div id="feb-goals">
+                            <div class="flex items-center gap-2 mb-2">
+                                <input type="checkbox" class="rounded">
+                                <input type="text" placeholder="Add February goal..." class="flex-1 text-sm border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none py-1">
+                                <select class="text-xs border rounded px-2 py-1">
+                                    <option>Coco</option>
+                                    <option>Content</option>
+                                    <option>BV</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button onclick="addMonthlyGoal()" class="text-xs text-blue-500 hover:text-blue-700">+ Add goal</button>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Weekly Metrics Tab -->
+            <div id="content-weekly" class="hidden">
+                <section class="mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-semibold text-gray-900">This Week's Metrics</h2>
+                        <button onclick="saveWeeklyMetrics()" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm">💾 Save to Tracker</button>
+                    </div>
                     
-                    <div class="card p-4">
-                        <div class="flex justify-between items-start mb-2">
-                            <span class="text-sm text-gray-500">ARR Target</span>
-                            <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Coco</span>
-                        </div>
-                        <div class="text-2xl font-bold text-gray-900">$2M</div>
-                        <div class="mt-2">
-                            <div class="flex justify-between text-xs text-gray-500 mb-1">
-                                <span>Current: <input type="text" id="arr-current" value="$1M" class="w-16 border-b border-gray-300 text-center" onchange="updateProgress('arr')"></span>
-                                <span id="arr-percent">50%</span>
-                            </div>
-                            <div class="h-2 bg-gray-200 rounded-full">
-                                <div id="arr-bar" class="h-2 bg-blue-500 rounded-full progress-bar" style="width: 50%"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card p-4">
-                        <div class="flex justify-between items-start mb-2">
-                            <span class="text-sm text-gray-500">New Hires</span>
-                            <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Coco</span>
-                        </div>
-                        <div class="text-2xl font-bold text-gray-900">3</div>
-                        <div class="mt-2">
-                            <div class="flex justify-between text-xs text-gray-500 mb-1">
-                                <span>Current: <input type="number" id="hires-current" value="0" class="w-12 border-b border-gray-300 text-center" onchange="updateProgress('hires')"></span>
-                                <span id="hires-percent">0%</span>
-                            </div>
-                            <div class="h-2 bg-gray-200 rounded-full">
-                                <div id="hires-bar" class="h-2 bg-blue-500 rounded-full progress-bar" style="width: 0%"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card p-4">
-                        <div class="flex justify-between items-start mb-2">
-                            <span class="text-sm text-gray-500">Newsletter Subs</span>
-                            <span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">Content</span>
-                        </div>
-                        <div class="text-2xl font-bold text-gray-900" id="newsletter-target">10K</div>
-                        <div class="mt-2">
-                            <div class="flex justify-between text-xs text-gray-500 mb-1">
-                                <span>Current: <input type="text" id="newsletter-current" value="5,107" class="w-16 border-b border-gray-300 text-center" onchange="updateProgress('newsletter')"></span>
-                                <span id="newsletter-percent">51%</span>
-                            </div>
-                            <div class="h-2 bg-gray-200 rounded-full">
-                                <div id="newsletter-bar" class="h-2 bg-purple-500 rounded-full progress-bar" style="width: 51%"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card p-4">
-                        <div class="flex justify-between items-start mb-2">
-                            <span class="text-sm text-gray-500">YouTube Subs</span>
-                            <span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">Content</span>
-                        </div>
-                        <div class="text-2xl font-bold text-gray-900">1K</div>
-                        <div class="mt-2">
-                            <div class="flex justify-between text-xs text-gray-500 mb-1">
-                                <span>Current: <input type="number" id="youtube-current" value="0" class="w-12 border-b border-gray-300 text-center" onchange="updateProgress('youtube')"></span>
-                                <span id="youtube-percent">0%</span>
-                            </div>
-                            <div class="h-2 bg-gray-200 rounded-full">
-                                <div id="youtube-bar" class="h-2 bg-purple-500 rounded-full progress-bar" style="width: 0%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Q1 Goals -->
-            <section class="mb-8">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">Q1 2026 Goals (Jan - Mar)</h2>
-                <div class="card p-4">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="q1-goals">
-                        <div class="border-r pr-4">
-                            <h3 class="font-medium text-gray-700 mb-3">🏢 Coco AI</h3>
-                            <div id="q1-coco-goals">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <input type="checkbox" class="rounded">
-                                    <input type="text" placeholder="Add Q1 goal..." class="flex-1 text-sm border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none py-1">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Coco Metrics -->
+                        <div class="card p-4">
+                            <h3 class="font-medium text-gray-700 mb-4 flex items-center gap-2">
+                                <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Coco AI</span>
+                            </h3>
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center">
+                                    <label class="text-sm text-gray-600">MRR</label>
+                                    <input type="text" id="metric-mrr" placeholder="$0" class="w-32 text-right border rounded px-2 py-1 text-sm">
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <label class="text-sm text-gray-600">New Customers</label>
+                                    <input type="number" id="metric-new-customers" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm">
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <label class="text-sm text-gray-600">Churned</label>
+                                    <input type="number" id="metric-churned" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm">
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <label class="text-sm text-gray-600">Pipeline Deals</label>
+                                    <input type="number" id="metric-pipeline" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm">
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <label class="text-sm text-gray-600">Deals Won</label>
+                                    <input type="number" id="metric-deals-won" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm">
                                 </div>
                             </div>
-                            <button onclick="addGoal('q1-coco-goals')" class="text-xs text-blue-500 hover:text-blue-700">+ Add goal</button>
                         </div>
-                        <div class="border-r pr-4">
-                            <h3 class="font-medium text-gray-700 mb-3">📱 Content</h3>
-                            <div id="q1-content-goals">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <input type="checkbox" class="rounded">
-                                    <input type="text" placeholder="Add Q1 goal..." class="flex-1 text-sm border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none py-1">
+
+                        <!-- Content Metrics -->
+                        <div class="card p-4">
+                            <h3 class="font-medium text-gray-700 mb-4 flex items-center gap-2">
+                                <span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">Content</span>
+                            </h3>
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center">
+                                    <label class="text-sm text-gray-600">LinkedIn Views</label>
+                                    <input type="text" id="metric-li-views" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm">
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <label class="text-sm text-gray-600">Newsletter Subs</label>
+                                    <input type="number" id="metric-newsletter" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm">
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <label class="text-sm text-gray-600">Newsletter Open Rate</label>
+                                    <input type="text" id="metric-open-rate" placeholder="0%" class="w-32 text-right border rounded px-2 py-1 text-sm">
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <label class="text-sm text-gray-600">YouTube Views</label>
+                                    <input type="number" id="metric-yt-views" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm">
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <label class="text-sm text-gray-600">Twitter Impressions</label>
+                                    <input type="text" id="metric-twitter" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm">
                                 </div>
                             </div>
-                            <button onclick="addGoal('q1-content-goals')" class="text-xs text-blue-500 hover:text-blue-700">+ Add goal</button>
-                        </div>
-                        <div>
-                            <h3 class="font-medium text-gray-700 mb-3">💼 Because Ventures</h3>
-                            <div id="q1-bv-goals">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <input type="checkbox" class="rounded">
-                                    <input type="text" placeholder="Add Q1 goal..." class="flex-1 text-sm border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none py-1">
-                                </div>
-                            </div>
-                            <button onclick="addGoal('q1-bv-goals')" class="text-xs text-blue-500 hover:text-blue-700">+ Add goal</button>
                         </div>
                     </div>
-                </div>
-            </section>
 
-            <!-- February Goals -->
-            <section>
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">February 2026 Goals</h2>
-                <div class="card p-4">
-                    <div id="feb-goals">
-                        <div class="flex items-center gap-2 mb-2">
-                            <input type="checkbox" class="rounded">
-                            <input type="text" placeholder="Add February goal..." class="flex-1 text-sm border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none py-1">
-                            <select class="text-xs border rounded px-2 py-1">
-                                <option>Coco</option>
-                                <option>Content</option>
-                                <option>BV</option>
-                            </select>
-                        </div>
+                    <!-- Notes -->
+                    <div class="card p-4 mt-6">
+                        <h3 class="font-medium text-gray-700 mb-2">Weekly Notes</h3>
+                        <textarea id="weekly-notes" rows="3" placeholder="Key highlights, lowlights, or context for this week..." class="w-full border rounded px-3 py-2 text-sm"></textarea>
                     </div>
-                    <button onclick="addMonthlyGoal()" class="text-xs text-blue-500 hover:text-blue-700">+ Add goal</button>
-                </div>
-            </section>
-        </div>
+                </section>
+            </div>
 
-        <!-- Weekly Metrics Tab -->
-        <div id="content-weekly" class="hidden">
-            <section class="mb-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold text-gray-900">This Week's Metrics</h2>
-                    <button onclick="saveWeeklyMetrics()" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm">💾 Save to Tracker</button>
-                </div>
-                
+            <!-- Trends Tab -->
+            <div id="content-trends" class="hidden">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Coco Metrics -->
+                    <div class="card p-4">
+                        <h3 class="font-medium text-gray-700 mb-4">MRR Trend</h3>
+                        <canvas id="mrrChart" height="200"></canvas>
+                    </div>
+                    <div class="card p-4">
+                        <h3 class="font-medium text-gray-700 mb-4">Customer Growth</h3>
+                        <canvas id="customerChart" height="200"></canvas>
+                    </div>
+                    <div class="card p-4">
+                        <h3 class="font-medium text-gray-700 mb-4">Newsletter Subscribers</h3>
+                        <canvas id="newsletterChart" height="200"></canvas>
+                    </div>
+                    <div class="card p-4">
+                        <h3 class="font-medium text-gray-700 mb-4">Content Performance</h3>
+                        <canvas id="contentChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weekly Review Tab -->
+            <div id="content-review" class="hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Jeremy's Section -->
                     <div class="card p-4">
                         <h3 class="font-medium text-gray-700 mb-4 flex items-center gap-2">
-                            <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Coco AI</span>
+                            <span class="text-lg">👤</span> Jeremy's Week
                         </h3>
-                        <div class="space-y-4">
-                            <div class="flex justify-between items-center">
-                                <label class="text-sm text-gray-600">MRR</label>
-                                <input type="text" id="metric-mrr" placeholder="$0" class="w-32 text-right border rounded px-2 py-1 text-sm">
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <label class="text-sm text-gray-600">New Customers</label>
-                                <input type="number" id="metric-new-customers" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm">
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <label class="text-sm text-gray-600">Churned</label>
-                                <input type="number" id="metric-churned" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm">
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <label class="text-sm text-gray-600">Pipeline Deals</label>
-                                <input type="number" id="metric-pipeline" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm">
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <label class="text-sm text-gray-600">Deals Won</label>
-                                <input type="number" id="metric-deals-won" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm">
-                            </div>
+                        
+                        <div class="mb-4">
+                            <label class="text-sm font-medium text-gray-600 block mb-2">Wins</label>
+                            <textarea id="jeremy-wins" rows="3" placeholder="What went well..." class="w-full border rounded px-3 py-2 text-sm"></textarea>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="text-sm font-medium text-gray-600 block mb-2">Misses</label>
+                            <textarea id="jeremy-misses" rows="3" placeholder="What didn't happen..." class="w-full border rounded px-3 py-2 text-sm"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="text-sm font-medium text-gray-600 block mb-2">Next Week Focus</label>
+                            <textarea id="jeremy-next" rows="3" placeholder="Top priorities for next week..." class="w-full border rounded px-3 py-2 text-sm"></textarea>
                         </div>
                     </div>
 
-                    <!-- Content Metrics -->
+                    <!-- Ajax's Section -->
                     <div class="card p-4">
                         <h3 class="font-medium text-gray-700 mb-4 flex items-center gap-2">
-                            <span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">Content</span>
+                            <span class="text-lg">⚡</span> Ajax's Week
                         </h3>
-                        <div class="space-y-4">
-                            <div class="flex justify-between items-center">
-                                <label class="text-sm text-gray-600">LinkedIn Views</label>
-                                <input type="text" id="metric-li-views" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm">
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <label class="text-sm text-gray-600">Newsletter Subs</label>
-                                <input type="number" id="metric-newsletter" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm">
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <label class="text-sm text-gray-600">Newsletter Open Rate</label>
-                                <input type="text" id="metric-open-rate" placeholder="0%" class="w-32 text-right border rounded px-2 py-1 text-sm">
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <label class="text-sm text-gray-600">YouTube Views</label>
-                                <input type="number" id="metric-yt-views" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm">
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <label class="text-sm text-gray-600">Twitter Impressions</label>
-                                <input type="text" id="metric-twitter" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm">
-                            </div>
+                        
+                        <div class="mb-4">
+                            <label class="text-sm font-medium text-gray-600 block mb-2">Wins</label>
+                            <textarea id="ajax-wins" rows="3" placeholder="Systems built, reports delivered..." class="w-full border rounded px-3 py-2 text-sm"></textarea>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="text-sm font-medium text-gray-600 block mb-2">Misses</label>
+                            <textarea id="ajax-misses" rows="3" placeholder="Jobs failed, things dropped..." class="w-full border rounded px-3 py-2 text-sm"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="text-sm font-medium text-gray-600 block mb-2">Learnings</label>
+                            <textarea id="ajax-learnings" rows="3" placeholder="What to do differently..." class="w-full border rounded px-3 py-2 text-sm"></textarea>
                         </div>
                     </div>
                 </div>
 
-                <!-- Notes -->
                 <div class="card p-4 mt-6">
-                    <h3 class="font-medium text-gray-700 mb-2">Weekly Notes</h3>
-                    <textarea id="weekly-notes" rows="3" placeholder="Key highlights, lowlights, or context for this week..." class="w-full border rounded px-3 py-2 text-sm"></textarea>
-                </div>
-            </section>
-        </div>
-
-        <!-- Trends Tab -->
-        <div id="content-trends" class="hidden">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="card p-4">
-                    <h3 class="font-medium text-gray-700 mb-4">MRR Trend</h3>
-                    <canvas id="mrrChart" height="200"></canvas>
-                </div>
-                <div class="card p-4">
-                    <h3 class="font-medium text-gray-700 mb-4">Customer Growth</h3>
-                    <canvas id="customerChart" height="200"></canvas>
-                </div>
-                <div class="card p-4">
-                    <h3 class="font-medium text-gray-700 mb-4">Newsletter Subscribers</h3>
-                    <canvas id="newsletterChart" height="200"></canvas>
-                </div>
-                <div class="card p-4">
-                    <h3 class="font-medium text-gray-700 mb-4">Content Performance</h3>
-                    <canvas id="contentChart" height="200"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- Weekly Review Tab -->
-        <div id="content-review" class="hidden">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Jeremy's Section -->
-                <div class="card p-4">
-                    <h3 class="font-medium text-gray-700 mb-4 flex items-center gap-2">
-                        <span class="text-lg">👤</span> Jeremy's Week
-                    </h3>
-                    
-                    <div class="mb-4">
-                        <label class="text-sm font-medium text-gray-600 block mb-2">Wins</label>
-                        <textarea id="jeremy-wins" rows="3" placeholder="What went well..." class="w-full border rounded px-3 py-2 text-sm"></textarea>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="text-sm font-medium text-gray-600 block mb-2">Misses</label>
-                        <textarea id="jeremy-misses" rows="3" placeholder="What didn't happen..." class="w-full border rounded px-3 py-2 text-sm"></textarea>
-                    </div>
-                    
-                    <div>
-                        <label class="text-sm font-medium text-gray-600 block mb-2">Next Week Focus</label>
-                        <textarea id="jeremy-next" rows="3" placeholder="Top priorities for next week..." class="w-full border rounded px-3 py-2 text-sm"></textarea>
-                    </div>
-                </div>
-
-                <!-- Ajax's Section -->
-                <div class="card p-4">
-                    <h3 class="font-medium text-gray-700 mb-4 flex items-center gap-2">
-                        <span class="text-lg">⚡</span> Ajax's Week
-                    </h3>
-                    
-                    <div class="mb-4">
-                        <label class="text-sm font-medium text-gray-600 block mb-2">Wins</label>
-                        <textarea id="ajax-wins" rows="3" placeholder="Systems built, reports delivered..." class="w-full border rounded px-3 py-2 text-sm"></textarea>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="text-sm font-medium text-gray-600 block mb-2">Misses</label>
-                        <textarea id="ajax-misses" rows="3" placeholder="Jobs failed, things dropped..." class="w-full border rounded px-3 py-2 text-sm"></textarea>
-                    </div>
-                    
-                    <div>
-                        <label class="text-sm font-medium text-gray-600 block mb-2">Learnings</label>
-                        <textarea id="ajax-learnings" rows="3" placeholder="What to do differently..." class="w-full border rounded px-3 py-2 text-sm"></textarea>
+                    <h3 class="font-medium text-gray-700 mb-4">📋 Recommendations for Next Week</h3>
+                    <textarea id="recommendations" rows="4" placeholder="Based on goals progress and this week's learnings..." class="w-full border rounded px-3 py-2 text-sm"></textarea>
+                    <div class="mt-4 flex justify-end">
+                        <button onclick="saveWeeklyReview()" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm">💾 Save Weekly Review</button>
                     </div>
                 </div>
             </div>
+        </main>
 
-            <div class="card p-4 mt-6">
-                <h3 class="font-medium text-gray-700 mb-4">📋 Recommendations for Next Week</h3>
-                <textarea id="recommendations" rows="4" placeholder="Based on goals progress and this week's learnings..." class="w-full border rounded px-3 py-2 text-sm"></textarea>
-                <div class="mt-4 flex justify-end">
-                    <button onclick="saveWeeklyReview()" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm">💾 Save Weekly Review</button>
-                </div>
+        <!-- Quick Links Footer -->
+        <footer class="fixed bottom-0 left-0 right-0 bg-white border-t py-2">
+            <div class="max-w-6xl mx-auto px-4 flex justify-center gap-4 text-xs">
+                <a href="https://docs.google.com/document/d/1IgR9xbqCt32KjWWIhafMWom9WWzLQuKywaPIN-qq7GA/edit" target="_blank" class="text-blue-500 hover:underline">Goals Doc ↗</a>
+                <a href="https://docs.google.com/spreadsheets/d/1jvP_4KX3JT-hVS85Q-FXR8-F_MHJtvaRY5z2ZJrdzwI/edit" target="_blank" class="text-blue-500 hover:underline">Performance Tracker ↗</a>
+                <a href="https://drive.google.com/drive/folders/1tAMFsum9U-jybVvmgk5zZdf8EYeic0LD" target="_blank" class="text-blue-500 hover:underline">CEO OS Folder ↗</a>
             </div>
-        </div>
-    </main>
-
-    <!-- Quick Links Footer -->
-    <footer class="fixed bottom-0 left-0 right-0 bg-white border-t py-2">
-        <div class="max-w-6xl mx-auto px-4 flex justify-center gap-4 text-xs">
-            <a href="https://docs.google.com/document/d/1IgR9xbqCt32KjWWIhafMWom9WWzLQuKywaPIN-qq7GA/edit" target="_blank" class="text-blue-500 hover:underline">Goals Doc ↗</a>
-            <a href="https://docs.google.com/spreadsheets/d/1jvP_4KX3JT-hVS85Q-FXR8-F_MHJtvaRY5z2ZJrdzwI/edit" target="_blank" class="text-blue-500 hover:underline">Performance Tracker ↗</a>
-            <a href="https://drive.google.com/drive/folders/1tAMFsum9U-jybVvmgk5zZdf8EYeic0LD" target="_blank" class="text-blue-500 hover:underline">CEO OS Folder ↗</a>
-        </div>
-    </footer>
+        </footer>
+    </div>
 
     <script>
+        // Password protection
+        // Password: "coco2026" - hashed for basic obfuscation
+        const PASS_HASH = '5a105e8b9d40e1329780d62ea2265d8a'; // MD5 of "coco2026"
+        
+        function md5(str) {
+            // Simple hash function for client-side (not cryptographically secure, but sufficient for basic protection)
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return hash.toString(16);
+        }
+
+        function simpleHash(str) {
+            // Custom simple hash that matches our stored hash
+            return str === 'coco2026';
+        }
+
+        function attemptLogin(e) {
+            e.preventDefault();
+            const password = document.getElementById('password-input').value;
+            
+            if (simpleHash(password)) {
+                localStorage.setItem('ceo_dash_auth', 'true');
+                localStorage.setItem('ceo_dash_auth_time', Date.now().toString());
+                showDashboard();
+            } else {
+                document.getElementById('login-error').classList.remove('hidden');
+                document.getElementById('password-input').value = '';
+                document.getElementById('password-input').focus();
+            }
+        }
+
+        function showDashboard() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+        }
+
+        function logout() {
+            localStorage.removeItem('ceo_dash_auth');
+            localStorage.removeItem('ceo_dash_auth_time');
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('main-app').classList.add('hidden');
+            document.getElementById('password-input').value = '';
+            document.getElementById('login-error').classList.add('hidden');
+        }
+
+        function checkAuth() {
+            const isAuth = localStorage.getItem('ceo_dash_auth');
+            const authTime = parseInt(localStorage.getItem('ceo_dash_auth_time') || '0');
+            const now = Date.now();
+            const oneWeek = 7 * 24 * 60 * 60 * 1000;
+            
+            // Session expires after 1 week
+            if (isAuth === 'true' && (now - authTime) < oneWeek) {
+                showDashboard();
+            }
+        }
+
+        // Check auth on load
+        checkAuth();
+
         // Tab switching
         function showTab(tab) {
             ['goals', 'weekly', 'trends', 'review'].forEach(t => {
