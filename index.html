@@ -3,754 +3,485 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CEO Dashboard - Jeremy Horowitz</title>
+    <title>CEO Dashboard - Jeremy Horowitz 2026</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .tab-active { border-bottom: 3px solid #3b82f6; color: #3b82f6; }
+        .pillar-coco { border-left: 4px solid #3b82f6; }
+        .pillar-content { border-left: 4px solid #8b5cf6; }
+        .pillar-invest { border-left: 4px solid #22c55e; }
         .progress-bar { transition: width 0.5s ease-in-out; }
         .card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-        #login-screen { backdrop-filter: blur(8px); }
-        .delta-positive { color: #22c55e; }
-        .delta-negative { color: #ef4444; }
-        .save-indicator { transition: opacity 0.3s; }
+        .tab-active { border-bottom: 3px solid #3b82f6; color: #3b82f6; font-weight: 600; }
+        .subtab-active { background: #8b5cf6; color: white; }
+        .quarter-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; }
+        .metric-up { color: #22c55e; }
+        .metric-down { color: #ef4444; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
 
-    <!-- Login Screen -->
-    <div id="login-screen" class="fixed inset-0 bg-gray-900/95 flex items-center justify-center z-50">
-        <div class="bg-white rounded-2xl p-8 max-w-sm w-full mx-4 shadow-2xl">
-            <div class="text-center mb-6">
-                <div class="text-4xl mb-2">🔐</div>
-                <h1 class="text-xl font-bold text-gray-900">CEO Dashboard</h1>
-                <p class="text-sm text-gray-500 mt-1">Enter password to continue</p>
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b sticky top-0 z-10">
+        <div class="max-w-6xl mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900">📊 CEO Dashboard 2026</h1>
+                    <p class="text-xs text-gray-500">Last updated: <span id="lastSync">-</span></p>
+                </div>
+                <button onclick="refreshData()" class="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm">↻ Refresh</button>
             </div>
-            <form onsubmit="attemptLogin(event)">
-                <input 
-                    type="password" 
-                    id="password-input" 
-                    placeholder="Password" 
-                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none mb-4"
-                    autofocus
-                >
-                <div id="login-error" class="text-red-500 text-sm mb-4 hidden">Incorrect password</div>
-                <button 
-                    type="submit" 
-                    class="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition"
-                >
-                    Unlock Dashboard
-                </button>
-            </form>
-            <p class="text-xs text-gray-400 text-center mt-4">Private access only</p>
         </div>
-    </div>
+    </header>
 
-    <!-- Main App (hidden until authenticated) -->
-    <div id="main-app" class="hidden">
-        <!-- Header -->
-        <header class="bg-white shadow-sm border-b">
-            <div class="max-w-6xl mx-auto px-4 py-4">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h1 class="text-2xl font-bold text-gray-900">CEO Dashboard</h1>
-                        <p class="text-sm text-gray-500">Week of <span id="currentWeek">Feb 10-14, 2026</span></p>
+    <!-- Main Navigation -->
+    <nav class="bg-white border-b">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex gap-4 overflow-x-auto">
+                <button onclick="showTab('overview')" id="tab-overview" class="py-3 px-2 text-sm whitespace-nowrap tab-active">📊 Overview</button>
+                <button onclick="showTab('coco')" id="tab-coco" class="py-3 px-2 text-sm whitespace-nowrap text-gray-500">🏢 Coco AI</button>
+                <button onclick="showTab('content')" id="tab-content" class="py-3 px-2 text-sm whitespace-nowrap text-gray-500">📱 Content</button>
+                <button onclick="showTab('invest')" id="tab-invest" class="py-3 px-2 text-sm whitespace-nowrap text-gray-500">💰 Investments</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-4 py-4 pb-16">
+
+        <!-- OVERVIEW TAB -->
+        <div id="content-overview">
+            <!-- Three Pillars Summary -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                
+                <!-- Coco AI Pillar -->
+                <div class="card p-4 pillar-coco">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="font-bold text-gray-900">🏢 Coco AI</h3>
+                        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Day Job</span>
                     </div>
-                    <div class="flex gap-2 items-center">
-                        <span id="save-indicator" class="text-xs text-green-600 save-indicator opacity-0">✓ Saved</span>
-                        <button onclick="refreshData()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm">↻ Refresh</button>
-                        <button onclick="openInSheets()" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm">Open in Sheets</button>
-                        <button onclick="logout()" class="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm">🔒 Lock</button>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">ARR → $2M</span>
+                                <span class="font-medium" id="arr-progress">$1M</span>
+                            </div>
+                            <div class="h-2 bg-gray-200 rounded-full">
+                                <div id="arr-bar" class="h-2 bg-blue-500 rounded-full progress-bar" style="width: 50%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">Hires</span>
+                                <span class="font-medium">0/3</span>
+                            </div>
+                            <div class="h-2 bg-gray-200 rounded-full">
+                                <div class="h-2 bg-blue-500 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content Pillar -->
+                <div class="card p-4 pillar-content">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="font-bold text-gray-900">📱 Content</h3>
+                        <span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">LBAB</span>
+                    </div>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">Newsletter</span>
+                                <span class="font-medium" id="overview-newsletter">3.6K/20K</span>
+                            </div>
+                            <div class="h-2 bg-gray-200 rounded-full">
+                                <div class="h-2 bg-purple-500 rounded-full" style="width: 18%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">LinkedIn</span>
+                                <span class="font-medium">39K/50K</span>
+                            </div>
+                            <div class="h-2 bg-gray-200 rounded-full">
+                                <div class="h-2 bg-purple-500 rounded-full" style="width: 78%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Investments Pillar -->
+                <div class="card p-4 pillar-invest">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="font-bold text-gray-900">💰 Investments</h3>
+                        <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Trading</span>
+                    </div>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">YTD Gains</span>
+                                <span class="font-medium">$0/$100K</span>
+                            </div>
+                            <div class="h-2 bg-gray-200 rounded-full">
+                                <div class="h-2 bg-green-500 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </header>
 
-        <!-- Navigation Tabs -->
-        <nav class="bg-white border-b">
-            <div class="max-w-6xl mx-auto px-4">
-                <div class="flex gap-6">
-                    <button onclick="showTab('goals')" id="tab-goals" class="py-3 px-1 text-sm font-medium tab-active">🎯 Goals</button>
-                    <button onclick="showTab('weekly')" id="tab-weekly" class="py-3 px-1 text-sm font-medium text-gray-500 hover:text-gray-700">📊 Weekly Metrics</button>
-                    <button onclick="showTab('trends')" id="tab-trends" class="py-3 px-1 text-sm font-medium text-gray-500 hover:text-gray-700">📈 Trends</button>
-                    <button onclick="showTab('review')" id="tab-review" class="py-3 px-1 text-sm font-medium text-gray-500 hover:text-gray-700">📝 Weekly Review</button>
+            <!-- Quick Stats -->
+            <div class="card p-4">
+                <h3 class="font-semibold text-gray-700 mb-3">📈 This Week's Highlights</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div class="p-3 bg-gray-50 rounded-lg">
+                        <p class="text-2xl font-bold text-blue-600" id="stat-arr">$1M</p>
+                        <p class="text-xs text-gray-500">Current ARR</p>
+                    </div>
+                    <div class="p-3 bg-gray-50 rounded-lg">
+                        <p class="text-2xl font-bold text-purple-600" id="stat-subs">3,614</p>
+                        <p class="text-xs text-gray-500">Newsletter Subs</p>
+                    </div>
+                    <div class="p-3 bg-gray-50 rounded-lg">
+                        <p class="text-2xl font-bold text-purple-600">39.9%</p>
+                        <p class="text-xs text-gray-500">Avg Open Rate</p>
+                    </div>
+                    <div class="p-3 bg-gray-50 rounded-lg">
+                        <p class="text-2xl font-bold text-green-600">154</p>
+                        <p class="text-xs text-gray-500">Total Posts</p>
+                    </div>
                 </div>
             </div>
-        </nav>
+        </div>
 
-        <!-- Main Content -->
-        <main class="max-w-6xl mx-auto px-4 py-6 pb-20">
-            
-            <!-- Goals Tab -->
-            <div id="content-goals">
-                <!-- Annual Goals -->
-                <section class="mb-8">
-                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Annual Goals (2026)</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        
-                        <!-- ARR Card -->
-                        <div class="card p-4">
-                            <div class="flex justify-between items-start mb-2">
-                                <span class="text-sm text-gray-500">ARR Target</span>
-                                <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Coco</span>
-                            </div>
-                            <div class="text-2xl font-bold text-gray-900">$2M</div>
-                            <div class="mt-2">
-                                <div class="flex justify-between text-xs text-gray-500 mb-1">
-                                    <span>Current: $<input type="text" id="arr-current" data-key="arr" value="1M" class="w-12 border-b border-gray-300 text-center metric-input" oninput="updateGoalProgress('arr')"></span>
-                                    <span id="arr-percent">50%</span>
-                                </div>
-                                <div class="h-2 bg-gray-200 rounded-full">
-                                    <div id="arr-bar" class="h-2 bg-blue-500 rounded-full progress-bar" style="width: 50%"></div>
-                                </div>
-                                <div class="text-xs mt-1">
-                                    <span class="text-gray-400">Need:</span> 
-                                    <span id="arr-delta" class="font-medium">$1M more</span>
-                                </div>
-                            </div>
+        <!-- COCO AI TAB -->
+        <div id="content-coco" class="hidden">
+            <div class="card p-4 mb-4">
+                <h2 class="text-lg font-bold text-gray-900 mb-4">🏢 Coco AI - 2026 Goals</h2>
+                
+                <!-- ARR -->
+                <div class="mb-6">
+                    <h3 class="font-semibold text-gray-800 mb-2">2x ARR ($1M → $2M)</h3>
+                    <div class="grid grid-cols-4 gap-2 text-xs">
+                        <div class="bg-blue-50 p-2 rounded text-center">
+                            <span class="font-bold">Q1</span><br>$8.8K
                         </div>
-
-                        <!-- Hires Card -->
-                        <div class="card p-4">
-                            <div class="flex justify-between items-start mb-2">
-                                <span class="text-sm text-gray-500">New Hires</span>
-                                <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Coco</span>
-                            </div>
-                            <div class="text-2xl font-bold text-gray-900">3</div>
-                            <div class="mt-2">
-                                <div class="flex justify-between text-xs text-gray-500 mb-1">
-                                    <span>Current: <input type="number" id="hires-current" data-key="hires" value="0" class="w-10 border-b border-gray-300 text-center metric-input" oninput="updateGoalProgress('hires')"></span>
-                                    <span id="hires-percent">0%</span>
-                                </div>
-                                <div class="h-2 bg-gray-200 rounded-full">
-                                    <div id="hires-bar" class="h-2 bg-blue-500 rounded-full progress-bar" style="width: 0%"></div>
-                                </div>
-                                <div class="text-xs mt-1">
-                                    <span class="text-gray-400">Need:</span> 
-                                    <span id="hires-delta" class="font-medium">3 more</span>
-                                </div>
-                            </div>
+                        <div class="bg-blue-50 p-2 rounded text-center">
+                            <span class="font-bold">Q2</span><br>$10K
                         </div>
-
-                        <!-- Newsletter Card -->
-                        <div class="card p-4">
-                            <div class="flex justify-between items-start mb-2">
-                                <span class="text-sm text-gray-500">Newsletter Subs</span>
-                                <span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">Content</span>
-                            </div>
-                            <div class="text-2xl font-bold text-gray-900">10K</div>
-                            <div class="mt-2">
-                                <div class="flex justify-between text-xs text-gray-500 mb-1">
-                                    <span>Current: <input type="text" id="newsletter-current" data-key="newsletter" value="5,107" class="w-14 border-b border-gray-300 text-center metric-input" oninput="updateGoalProgress('newsletter')"></span>
-                                    <span id="newsletter-percent">51%</span>
-                                </div>
-                                <div class="h-2 bg-gray-200 rounded-full">
-                                    <div id="newsletter-bar" class="h-2 bg-purple-500 rounded-full progress-bar" style="width: 51%"></div>
-                                </div>
-                                <div class="text-xs mt-1">
-                                    <span class="text-gray-400">Need:</span> 
-                                    <span id="newsletter-delta" class="font-medium">4,893 more</span>
-                                </div>
-                            </div>
+                        <div class="bg-blue-50 p-2 rounded text-center">
+                            <span class="font-bold">Q3</span><br>$10K
                         </div>
-
-                        <!-- YouTube Card -->
-                        <div class="card p-4">
-                            <div class="flex justify-between items-start mb-2">
-                                <span class="text-sm text-gray-500">YouTube Subs</span>
-                                <span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">Content</span>
-                            </div>
-                            <div class="text-2xl font-bold text-gray-900">1K</div>
-                            <div class="mt-2">
-                                <div class="flex justify-between text-xs text-gray-500 mb-1">
-                                    <span>Current: <input type="number" id="youtube-current" data-key="youtube" value="36" class="w-12 border-b border-gray-300 text-center metric-input" oninput="updateGoalProgress('youtube')"></span>
-                                    <span id="youtube-percent">4%</span>
-                                </div>
-                                <div class="h-2 bg-gray-200 rounded-full">
-                                    <div id="youtube-bar" class="h-2 bg-purple-500 rounded-full progress-bar" style="width: 4%"></div>
-                                </div>
-                                <div class="text-xs mt-1">
-                                    <span class="text-gray-400">Need:</span> 
-                                    <span id="youtube-delta" class="font-medium">964 more</span>
-                                </div>
-                            </div>
+                        <div class="bg-blue-50 p-2 rounded text-center">
+                            <span class="font-bold">Q4</span><br>$10K
                         </div>
                     </div>
-                </section>
+                </div>
 
-                <!-- Q1 Goals -->
-                <section class="mb-8">
-                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Q1 2026 Goals (Jan - Mar)</h2>
-                    <div class="card p-4">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="q1-goals">
-                            <div class="border-r pr-4">
-                                <h3 class="font-medium text-gray-700 mb-3">🏢 Coco AI</h3>
-                                <div id="q1-coco-goals"></div>
-                                <button onclick="addGoal('q1-coco-goals', 'q1-coco')" class="text-xs text-blue-500 hover:text-blue-700">+ Add goal</button>
-                            </div>
-                            <div class="border-r pr-4">
-                                <h3 class="font-medium text-gray-700 mb-3">📱 Content</h3>
-                                <div id="q1-content-goals"></div>
-                                <button onclick="addGoal('q1-content-goals', 'q1-content')" class="text-xs text-blue-500 hover:text-blue-700">+ Add goal</button>
-                            </div>
-                            <div>
-                                <h3 class="font-medium text-gray-700 mb-3">💼 Because Ventures</h3>
-                                <div id="q1-bv-goals"></div>
-                                <button onclick="addGoal('q1-bv-goals', 'q1-bv')" class="text-xs text-blue-500 hover:text-blue-700">+ Add goal</button>
-                            </div>
+                <!-- Hires -->
+                <div class="mb-6">
+                    <h3 class="font-semibold text-gray-800 mb-2">Hire 3 Team Members</h3>
+                    <div class="grid grid-cols-4 gap-2 text-xs">
+                        <div class="bg-blue-50 p-2 rounded text-center">
+                            <span class="font-bold">Q1</span><br>French CSM
+                        </div>
+                        <div class="bg-blue-50 p-2 rounded text-center">
+                            <span class="font-bold">Q2</span><br>UK BD
+                        </div>
+                        <div class="bg-blue-50 p-2 rounded text-center">
+                            <span class="font-bold">Q3</span><br>Dev
+                        </div>
+                        <div class="bg-blue-50 p-2 rounded text-center">
+                            <span class="font-bold">Q4</span><br>Eng CSM
                         </div>
                     </div>
-                </section>
+                </div>
 
-                <!-- February Goals -->
-                <section>
-                    <h2 class="text-lg font-semibold text-gray-900 mb-4">February 2026 Goals</h2>
-                    <div class="card p-4">
-                        <div id="feb-goals"></div>
-                        <button onclick="addMonthlyGoal()" class="text-xs text-blue-500 hover:text-blue-700">+ Add goal</button>
+                <!-- LTV -->
+                <div>
+                    <h3 class="font-semibold text-gray-800 mb-2">LTV → $10K</h3>
+                    <div class="bg-blue-50 p-3 rounded">
+                        <p class="text-sm">Current: <strong>TBD</strong> | Target: <strong>$10,000</strong></p>
                     </div>
-                </section>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTENT TAB -->
+        <div id="content-content" class="hidden">
+            <!-- Sub Navigation -->
+            <div class="flex gap-2 mb-4 overflow-x-auto">
+                <button onclick="showContentTab('all')" id="subtab-all" class="px-3 py-1.5 text-sm rounded-full bg-purple-500 text-white subtab-active">All</button>
+                <button onclick="showContentTab('newsletter')" id="subtab-newsletter" class="px-3 py-1.5 text-sm rounded-full bg-gray-200 text-gray-700">📧 Newsletter</button>
+                <button onclick="showContentTab('linkedin')" id="subtab-linkedin" class="px-3 py-1.5 text-sm rounded-full bg-gray-200 text-gray-700">💼 LinkedIn</button>
+                <button onclick="showContentTab('twitter')" id="subtab-twitter" class="px-3 py-1.5 text-sm rounded-full bg-gray-200 text-gray-700">🐦 Twitter</button>
+                <button onclick="showContentTab('youtube')" id="subtab-youtube" class="px-3 py-1.5 text-sm rounded-full bg-gray-200 text-gray-700">🎬 YouTube</button>
             </div>
 
-            <!-- Weekly Metrics Tab -->
-            <div id="content-weekly" class="hidden">
-                <section class="mb-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-lg font-semibold text-gray-900">This Week's Metrics</h2>
-                        <button onclick="saveWeeklyMetrics()" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm">💾 Save to Tracker</button>
+            <!-- All Content Overview -->
+            <div id="content-all">
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div class="card p-3">
+                        <h4 class="font-semibold text-sm text-gray-700 mb-2">📧 Newsletter</h4>
+                        <p class="text-2xl font-bold text-purple-600">3,614</p>
+                        <p class="text-xs text-gray-500">subscribers</p>
+                        <p class="text-xs mt-1">Goal: 20K <span class="text-gray-400">(18%)</span></p>
                     </div>
+                    <div class="card p-3">
+                        <h4 class="font-semibold text-sm text-gray-700 mb-2">💼 LinkedIn</h4>
+                        <p class="text-2xl font-bold text-purple-600">39K</p>
+                        <p class="text-xs text-gray-500">followers</p>
+                        <p class="text-xs mt-1">Goal: 50K <span class="text-gray-400">(78%)</span></p>
+                    </div>
+                    <div class="card p-3">
+                        <h4 class="font-semibold text-sm text-gray-700 mb-2">🐦 Twitter</h4>
+                        <p class="text-2xl font-bold text-purple-600">~1K</p>
+                        <p class="text-xs text-gray-500">followers</p>
+                        <p class="text-xs mt-1">Goal: 2K <span class="text-gray-400">(50%)</span></p>
+                    </div>
+                    <div class="card p-3">
+                        <h4 class="font-semibold text-sm text-gray-700 mb-2">🎬 YouTube</h4>
+                        <p class="text-2xl font-bold text-purple-600">0</p>
+                        <p class="text-xs text-gray-500">subscribers</p>
+                        <p class="text-xs mt-1">Goal: 5K <span class="text-gray-400">(0%)</span></p>
+                    </div>
+                </div>
+
+                <!-- Shows & Reports -->
+                <div class="card p-4">
+                    <h4 class="font-semibold text-gray-700 mb-3">🎬 Shows & Reports</h4>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center gap-2">
+                            <span class="w-5 h-5 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center text-xs">⏳</span>
+                            <span>Billion Dollar Blunders (YouTube)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-5 h-5 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center text-xs">⏳</span>
+                            <span>Shopify AI Chronicles</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-5 h-5 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-xs">○</span>
+                            <span>Shopify Top 100 App Report</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Newsletter Detail -->
+            <div id="content-newsletter" class="hidden">
+                <div class="card p-4 mb-4">
+                    <h3 class="font-bold text-gray-900 mb-4">📧 Newsletter Performance</h3>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Coco Metrics -->
-                        <div class="card p-4">
-                            <h3 class="font-medium text-gray-700 mb-4 flex items-center gap-2">
-                                <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Coco AI</span>
-                            </h3>
-                            <div class="space-y-4">
-                                <div class="flex justify-between items-center">
-                                    <label class="text-sm text-gray-600">MRR</label>
-                                    <input type="text" id="metric-mrr" data-key="metric-mrr" placeholder="$0" class="w-32 text-right border rounded px-2 py-1 text-sm metric-input">
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <label class="text-sm text-gray-600">New Customers</label>
-                                    <input type="number" id="metric-new-customers" data-key="metric-new-customers" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm metric-input">
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <label class="text-sm text-gray-600">Churned</label>
-                                    <input type="number" id="metric-churned" data-key="metric-churned" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm metric-input">
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <label class="text-sm text-gray-600">Pipeline Deals</label>
-                                    <input type="number" id="metric-pipeline" data-key="metric-pipeline" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm metric-input">
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <label class="text-sm text-gray-600">Deals Won</label>
-                                    <input type="number" id="metric-deals-won" data-key="metric-deals-won" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm metric-input">
-                                </div>
-                            </div>
+                    <div class="grid grid-cols-3 gap-3 mb-4 text-center">
+                        <div class="bg-purple-50 p-3 rounded-lg">
+                            <p class="text-xl font-bold text-purple-600">3,614</p>
+                            <p class="text-xs text-gray-500">Active Subs</p>
                         </div>
-
-                        <!-- Content Metrics -->
-                        <div class="card p-4">
-                            <h3 class="font-medium text-gray-700 mb-4 flex items-center gap-2">
-                                <span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">Content</span>
-                            </h3>
-                            <div class="space-y-4">
-                                <div class="flex justify-between items-center">
-                                    <label class="text-sm text-gray-600">LinkedIn Views</label>
-                                    <input type="text" id="metric-li-views" data-key="metric-li-views" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm metric-input">
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <label class="text-sm text-gray-600">Newsletter Subs</label>
-                                    <input type="number" id="metric-newsletter" data-key="metric-newsletter-weekly" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm metric-input">
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <label class="text-sm text-gray-600">Newsletter Open Rate</label>
-                                    <input type="text" id="metric-open-rate" data-key="metric-open-rate" placeholder="0%" class="w-32 text-right border rounded px-2 py-1 text-sm metric-input">
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <label class="text-sm text-gray-600">YouTube Views</label>
-                                    <input type="number" id="metric-yt-views" data-key="metric-yt-views" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm metric-input">
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <label class="text-sm text-gray-600">Twitter Impressions</label>
-                                    <input type="text" id="metric-twitter" data-key="metric-twitter" placeholder="0" class="w-32 text-right border rounded px-2 py-1 text-sm metric-input">
-                                </div>
-                            </div>
+                        <div class="bg-purple-50 p-3 rounded-lg">
+                            <p class="text-xl font-bold text-purple-600">39.9%</p>
+                            <p class="text-xs text-gray-500">Avg Open Rate</p>
+                        </div>
+                        <div class="bg-purple-50 p-3 rounded-lg">
+                            <p class="text-xl font-bold text-purple-600">1.5%</p>
+                            <p class="text-xs text-gray-500">Avg CTR</p>
                         </div>
                     </div>
 
-                    <!-- Notes -->
-                    <div class="card p-4 mt-6">
-                        <h3 class="font-medium text-gray-700 mb-2">Weekly Notes</h3>
-                        <textarea id="weekly-notes" data-key="weekly-notes" rows="3" placeholder="Key highlights, lowlights, or context for this week..." class="w-full border rounded px-3 py-2 text-sm metric-input"></textarea>
-                    </div>
-                </section>
-            </div>
-
-            <!-- Trends Tab -->
-            <div id="content-trends" class="hidden">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="card p-4">
-                        <h3 class="font-medium text-gray-700 mb-4">MRR Trend</h3>
-                        <canvas id="mrrChart" height="200"></canvas>
-                    </div>
-                    <div class="card p-4">
-                        <h3 class="font-medium text-gray-700 mb-4">Customer Growth</h3>
-                        <canvas id="customerChart" height="200"></canvas>
-                    </div>
-                    <div class="card p-4">
-                        <h3 class="font-medium text-gray-700 mb-4">Newsletter Subscribers</h3>
-                        <canvas id="newsletterChart" height="200"></canvas>
-                    </div>
-                    <div class="card p-4">
-                        <h3 class="font-medium text-gray-700 mb-4">Content Performance</h3>
-                        <canvas id="contentChart" height="200"></canvas>
+                    <h4 class="font-semibold text-gray-700 mb-2">Recent Issues</h4>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                            <span class="truncate flex-1">Amazon Dip</span>
+                            <span class="text-gray-500 ml-2">35.3% open</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                            <span class="truncate flex-1">Twilio Profitable</span>
+                            <span class="text-gray-500 ml-2">39.7% open</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                            <span class="truncate flex-1">Stupidest Deal</span>
+                            <span class="text-gray-500 ml-2">39.9% open</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                            <span class="truncate flex-1">Coco AI 50x</span>
+                            <span class="text-green-600 ml-2">41.0% open</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                            <span class="truncate flex-1">Career Unlock</span>
+                            <span class="text-green-600 ml-2">41.5% open</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Weekly Review Tab -->
-            <div id="content-review" class="hidden">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Jeremy's Section -->
-                    <div class="card p-4">
-                        <h3 class="font-medium text-gray-700 mb-4 flex items-center gap-2">
-                            <span class="text-lg">👤</span> Jeremy's Week
-                        </h3>
-                        <div class="mb-4">
-                            <label class="text-sm font-medium text-gray-600 block mb-2">Wins</label>
-                            <textarea id="jeremy-wins" data-key="jeremy-wins" rows="3" placeholder="What went well..." class="w-full border rounded px-3 py-2 text-sm metric-input"></textarea>
+            <!-- LinkedIn Detail -->
+            <div id="content-linkedin" class="hidden">
+                <div class="card p-4">
+                    <h3 class="font-bold text-gray-900 mb-4">💼 LinkedIn Performance</h3>
+                    
+                    <div class="grid grid-cols-2 gap-3 mb-4 text-center">
+                        <div class="bg-blue-50 p-3 rounded-lg">
+                            <p class="text-xl font-bold text-blue-600">39K</p>
+                            <p class="text-xs text-gray-500">Followers</p>
                         </div>
-                        <div class="mb-4">
-                            <label class="text-sm font-medium text-gray-600 block mb-2">Misses</label>
-                            <textarea id="jeremy-misses" data-key="jeremy-misses" rows="3" placeholder="What didn't happen..." class="w-full border rounded px-3 py-2 text-sm metric-input"></textarea>
-                        </div>
-                        <div>
-                            <label class="text-sm font-medium text-gray-600 block mb-2">Next Week Focus</label>
-                            <textarea id="jeremy-next" data-key="jeremy-next" rows="3" placeholder="Top priorities for next week..." class="w-full border rounded px-3 py-2 text-sm metric-input"></textarea>
+                        <div class="bg-blue-50 p-3 rounded-lg">
+                            <p class="text-xl font-bold text-blue-600">50K</p>
+                            <p class="text-xs text-gray-500">Target</p>
                         </div>
                     </div>
 
-                    <!-- Ajax's Section -->
-                    <div class="card p-4">
-                        <h3 class="font-medium text-gray-700 mb-4 flex items-center gap-2">
-                            <span class="text-lg">⚡</span> Ajax's Week
-                        </h3>
-                        <div class="mb-4">
-                            <label class="text-sm font-medium text-gray-600 block mb-2">Wins</label>
-                            <textarea id="ajax-wins" data-key="ajax-wins" rows="3" placeholder="Systems built, reports delivered..." class="w-full border rounded px-3 py-2 text-sm metric-input"></textarea>
-                        </div>
-                        <div class="mb-4">
-                            <label class="text-sm font-medium text-gray-600 block mb-2">Misses</label>
-                            <textarea id="ajax-misses" data-key="ajax-misses" rows="3" placeholder="Jobs failed, things dropped..." class="w-full border rounded px-3 py-2 text-sm metric-input"></textarea>
-                        </div>
-                        <div>
-                            <label class="text-sm font-medium text-gray-600 block mb-2">Learnings</label>
-                            <textarea id="ajax-learnings" data-key="ajax-learnings" rows="3" placeholder="What to do differently..." class="w-full border rounded px-3 py-2 text-sm metric-input"></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card p-4 mt-6">
-                    <h3 class="font-medium text-gray-700 mb-4">📋 Recommendations for Next Week</h3>
-                    <textarea id="recommendations" data-key="recommendations" rows="4" placeholder="Based on goals progress and this week's learnings..." class="w-full border rounded px-3 py-2 text-sm metric-input"></textarea>
-                    <div class="mt-4 flex justify-end">
-                        <button onclick="saveWeeklyReview()" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm">💾 Save Weekly Review</button>
+                    <div class="bg-yellow-50 p-3 rounded-lg text-sm">
+                        <p class="text-yellow-800">⚠️ LinkedIn API access needed for detailed metrics. Currently pulling manually.</p>
                     </div>
                 </div>
             </div>
-        </main>
 
-        <!-- Quick Links Footer -->
-        <footer class="fixed bottom-0 left-0 right-0 bg-white border-t py-2">
-            <div class="max-w-6xl mx-auto px-4 flex justify-center gap-4 text-xs">
-                <a href="https://docs.google.com/document/d/1IgR9xbqCt32KjWWIhafMWom9WWzLQuKywaPIN-qq7GA/edit" target="_blank" class="text-blue-500 hover:underline">Goals Doc ↗</a>
-                <a href="https://docs.google.com/spreadsheets/d/1jvP_4KX3JT-hVS85Q-FXR8-F_MHJtvaRY5z2ZJrdzwI/edit" target="_blank" class="text-blue-500 hover:underline">Performance Tracker ↗</a>
-                <a href="https://drive.google.com/drive/folders/1tAMFsum9U-jybVvmgk5zZdf8EYeic0LD" target="_blank" class="text-blue-500 hover:underline">CEO OS Folder ↗</a>
+            <!-- Twitter Detail -->
+            <div id="content-twitter" class="hidden">
+                <div class="card p-4">
+                    <h3 class="font-bold text-gray-900 mb-4">🐦 Twitter Performance</h3>
+                    
+                    <div class="grid grid-cols-2 gap-3 mb-4 text-center">
+                        <div class="bg-sky-50 p-3 rounded-lg">
+                            <p class="text-xl font-bold text-sky-600">~1K</p>
+                            <p class="text-xs text-gray-500">Followers</p>
+                        </div>
+                        <div class="bg-sky-50 p-3 rounded-lg">
+                            <p class="text-xl font-bold text-sky-600">2K</p>
+                            <p class="text-xs text-gray-500">Target</p>
+                        </div>
+                    </div>
+
+                    <h4 class="font-semibold text-gray-700 mb-2">Recent Posts</h4>
+                    <div class="text-sm bg-gray-50 p-3 rounded">
+                        <p class="font-medium">2026 Bankruptcy Watchlist 🧵</p>
+                        <p class="text-gray-500 text-xs mt-1">Posted: Feb 10, 2026</p>
+                    </div>
+                </div>
             </div>
-        </footer>
-    </div>
+
+            <!-- YouTube Detail -->
+            <div id="content-youtube" class="hidden">
+                <div class="card p-4">
+                    <h3 class="font-bold text-gray-900 mb-4">🎬 YouTube Performance</h3>
+                    
+                    <div class="grid grid-cols-2 gap-3 mb-4 text-center">
+                        <div class="bg-red-50 p-3 rounded-lg">
+                            <p class="text-xl font-bold text-red-600">0</p>
+                            <p class="text-xs text-gray-500">Subscribers</p>
+                        </div>
+                        <div class="bg-red-50 p-3 rounded-lg">
+                            <p class="text-xl font-bold text-red-600">5K</p>
+                            <p class="text-xs text-gray-500">Target</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-yellow-50 p-3 rounded-lg text-sm">
+                        <p class="text-yellow-800">🎬 Channel just launched. First show "Billion Dollar Blunders" in production.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- INVESTMENTS TAB -->
+        <div id="content-invest" class="hidden">
+            <div class="card p-4">
+                <h2 class="text-lg font-bold text-gray-900 mb-4">💰 Investments</h2>
+                
+                <div class="bg-green-50 p-4 rounded-lg mb-4 text-center">
+                    <p class="text-3xl font-bold text-green-600">$0</p>
+                    <p class="text-sm text-green-700">YTD Gains (Target: $100K)</p>
+                </div>
+
+                <h4 class="font-semibold text-gray-700 mb-3">Positions</h4>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="border rounded-lg p-3 text-center">
+                        <p class="text-lg font-bold text-gray-700">$APP</p>
+                        <p class="text-xs text-gray-500">AppLovin</p>
+                    </div>
+                    <div class="border rounded-lg p-3 text-center">
+                        <p class="text-lg font-bold text-gray-700">$LVLU</p>
+                        <p class="text-xs text-gray-500">Lulu's</p>
+                    </div>
+                    <div class="border rounded-lg p-3 text-center">
+                        <p class="text-lg font-bold text-gray-700">$BTC</p>
+                        <p class="text-xs text-gray-500">Bitcoin</p>
+                    </div>
+                    <div class="border rounded-lg p-3 text-center">
+                        <p class="text-lg font-bold text-gray-700">$CMRC</p>
+                        <p class="text-xs text-gray-500">Commerce</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="fixed bottom-0 left-0 right-0 bg-white border-t py-2 text-center text-xs text-gray-400">
+        CEO Dashboard v2.0 | <a href="https://docs.google.com/document/d/19gmLhP_5NTfg7KK2MC1rlDilhA5KOFckD5scGcwik0M/edit" class="text-blue-500">Goals Doc ↗</a>
+    </footer>
 
     <script>
-        // ==================== AUTH ====================
-        function simpleHash(str) {
-            return str === 'coco2026';
-        }
-
-        function attemptLogin(e) {
-            e.preventDefault();
-            const password = document.getElementById('password-input').value;
-            if (simpleHash(password)) {
-                localStorage.setItem('ceo_dash_auth', 'true');
-                localStorage.setItem('ceo_dash_auth_time', Date.now().toString());
-                showDashboard();
-            } else {
-                document.getElementById('login-error').classList.remove('hidden');
-                document.getElementById('password-input').value = '';
-                document.getElementById('password-input').focus();
-            }
-        }
-
-        function showDashboard() {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('main-app').classList.remove('hidden');
-            loadAllData();
-        }
-
-        function logout() {
-            localStorage.removeItem('ceo_dash_auth');
-            localStorage.removeItem('ceo_dash_auth_time');
-            document.getElementById('login-screen').classList.remove('hidden');
-            document.getElementById('main-app').classList.add('hidden');
-            document.getElementById('password-input').value = '';
-            document.getElementById('login-error').classList.add('hidden');
-        }
-
-        function checkAuth() {
-            const isAuth = localStorage.getItem('ceo_dash_auth');
-            const authTime = parseInt(localStorage.getItem('ceo_dash_auth_time') || '0');
-            const now = Date.now();
-            const oneWeek = 7 * 24 * 60 * 60 * 1000;
-            if (isAuth === 'true' && (now - authTime) < oneWeek) {
-                showDashboard();
-            }
-        }
-
-        // ==================== DATA PERSISTENCE ====================
-        const STORAGE_KEY = 'ceo_dashboard_data';
-        let saveTimeout;
-
-        function saveAllData() {
-            const data = {
-                metrics: {},
-                goals: {
-                    'q1-coco': [],
-                    'q1-content': [],
-                    'q1-bv': [],
-                    'feb': []
-                },
-                lastUpdated: Date.now()
-            };
-
-            // Save all metric inputs
-            document.querySelectorAll('.metric-input').forEach(input => {
-                const key = input.dataset.key || input.id;
-                data.metrics[key] = input.value;
-            });
-
-            // Save goals
-            ['q1-coco', 'q1-content', 'q1-bv'].forEach(category => {
-                const container = document.getElementById(category + '-goals');
-                if (container) {
-                    const goals = [];
-                    container.querySelectorAll('.goal-item').forEach(item => {
-                        const checkbox = item.querySelector('input[type="checkbox"]');
-                        const text = item.querySelector('input[type="text"]');
-                        if (text && text.value) {
-                            goals.push({ text: text.value, done: checkbox?.checked || false });
-                        }
-                    });
-                    data.goals[category] = goals;
+        // Tab Navigation
+        function showTab(tabName) {
+            // Hide all content
+            document.querySelectorAll('[id^="content-"]').forEach(el => {
+                if (el.id.startsWith('content-') && !el.id.includes('content-all') && !el.id.includes('content-newsletter') && !el.id.includes('content-linkedin') && !el.id.includes('content-twitter') && !el.id.includes('content-youtube')) {
+                    el.classList.add('hidden');
                 }
             });
-
-            // Save February goals
-            const febContainer = document.getElementById('feb-goals');
-            if (febContainer) {
-                const febGoals = [];
-                febContainer.querySelectorAll('.goal-item').forEach(item => {
-                    const checkbox = item.querySelector('input[type="checkbox"]');
-                    const text = item.querySelector('input[type="text"]');
-                    const select = item.querySelector('select');
-                    if (text && text.value) {
-                        febGoals.push({ 
-                            text: text.value, 
-                            done: checkbox?.checked || false,
-                            category: select?.value || 'Coco'
-                        });
-                    }
-                });
-                data.goals.feb = febGoals;
+            
+            // Remove active from all tabs
+            document.querySelectorAll('[id^="tab-"]').forEach(el => {
+                el.classList.remove('tab-active');
+                el.classList.add('text-gray-500');
+            });
+            
+            // Show selected content
+            const content = document.getElementById('content-' + tabName);
+            if (content) content.classList.remove('hidden');
+            
+            // Activate tab
+            const tab = document.getElementById('tab-' + tabName);
+            if (tab) {
+                tab.classList.add('tab-active');
+                tab.classList.remove('text-gray-500');
             }
-
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-            showSaveIndicator();
         }
 
-        function loadAllData() {
-            const stored = localStorage.getItem(STORAGE_KEY);
-            if (!stored) {
-                initDefaultGoals();
-                return;
-            }
-
-            const data = JSON.parse(stored);
-
-            // Load metrics
-            if (data.metrics) {
-                Object.keys(data.metrics).forEach(key => {
-                    const input = document.querySelector(`[data-key="${key}"]`) || document.getElementById(key);
-                    if (input) {
-                        input.value = data.metrics[key];
-                    }
-                });
-            }
-
-            // Load goals
-            if (data.goals) {
-                ['q1-coco', 'q1-content', 'q1-bv'].forEach(category => {
-                    const containerId = category + '-goals';
-                    const container = document.getElementById(containerId);
-                    if (container && data.goals[category]) {
-                        container.innerHTML = '';
-                        data.goals[category].forEach(goal => {
-                            addGoalWithData(containerId, category, goal.text, goal.done);
-                        });
-                        if (data.goals[category].length === 0) {
-                            addGoal(containerId, category);
-                        }
-                    }
-                });
-
-                // Load February goals
-                const febContainer = document.getElementById('feb-goals');
-                if (febContainer && data.goals.feb) {
-                    febContainer.innerHTML = '';
-                    data.goals.feb.forEach(goal => {
-                        addMonthlyGoalWithData(goal.text, goal.done, goal.category);
-                    });
-                    if (data.goals.feb.length === 0) {
-                        addMonthlyGoal();
-                    }
+        // Content Sub-tab Navigation
+        function showContentTab(subTab) {
+            // Hide all content sub-sections
+            ['all', 'newsletter', 'linkedin', 'twitter', 'youtube'].forEach(name => {
+                const el = document.getElementById('content-' + name);
+                if (el) el.classList.add('hidden');
+                
+                const btn = document.getElementById('subtab-' + name);
+                if (btn) {
+                    btn.classList.remove('subtab-active', 'bg-purple-500', 'text-white');
+                    btn.classList.add('bg-gray-200', 'text-gray-700');
                 }
-            }
-
-            // Update all progress displays
-            updateGoalProgress('arr');
-            updateGoalProgress('hires');
-            updateGoalProgress('newsletter');
-            updateGoalProgress('youtube');
-        }
-
-        function initDefaultGoals() {
-            addGoal('q1-coco-goals', 'q1-coco');
-            addGoal('q1-content-goals', 'q1-content');
-            addGoal('q1-bv-goals', 'q1-bv');
-            addMonthlyGoal();
-        }
-
-        function showSaveIndicator() {
-            const indicator = document.getElementById('save-indicator');
-            indicator.classList.remove('opacity-0');
-            indicator.classList.add('opacity-100');
-            setTimeout(() => {
-                indicator.classList.remove('opacity-100');
-                indicator.classList.add('opacity-0');
-            }, 2000);
-        }
-
-        function debouncedSave() {
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(saveAllData, 500);
-        }
-
-        // ==================== GOALS ====================
-        const TARGETS = {
-            arr: 2000000,
-            hires: 3,
-            newsletter: 10000,
-            youtube: 1000
-        };
-
-        function parseNumber(value) {
-            if (!value) return 0;
-            let num = value.toString().replace(/[$,]/g, '');
-            if (num.toUpperCase().includes('M')) {
-                return parseFloat(num) * 1000000;
-            } else if (num.toUpperCase().includes('K')) {
-                return parseFloat(num) * 1000;
-            }
-            return parseFloat(num) || 0;
-        }
-
-        function formatDelta(delta, type) {
-            if (type === 'arr') {
-                if (delta >= 1000000) return '$' + (delta / 1000000).toFixed(1) + 'M more';
-                if (delta >= 1000) return '$' + (delta / 1000).toFixed(0) + 'K more';
-                return '$' + delta.toFixed(0) + ' more';
-            } else if (type === 'newsletter' || type === 'youtube') {
-                if (delta >= 1000) return (delta / 1000).toFixed(1) + 'K more';
-                return delta.toLocaleString() + ' more';
-            }
-            return delta + ' more';
-        }
-
-        function updateGoalProgress(type) {
-            const input = document.getElementById(type + '-current');
-            const current = parseNumber(input.value);
-            const target = TARGETS[type];
-            const percent = Math.min(100, Math.round((current / target) * 100));
-            const delta = Math.max(0, target - current);
-
-            document.getElementById(type + '-percent').textContent = percent + '%';
-            document.getElementById(type + '-bar').style.width = percent + '%';
+            });
             
-            const deltaEl = document.getElementById(type + '-delta');
-            if (delta === 0) {
-                deltaEl.textContent = '🎉 Goal reached!';
-                deltaEl.className = 'font-medium delta-positive';
-            } else {
-                deltaEl.textContent = formatDelta(delta, type);
-                deltaEl.className = 'font-medium';
+            // Show selected
+            const content = document.getElementById('content-' + subTab);
+            if (content) content.classList.remove('hidden');
+            
+            const btn = document.getElementById('subtab-' + subTab);
+            if (btn) {
+                btn.classList.add('subtab-active', 'bg-purple-500', 'text-white');
+                btn.classList.remove('bg-gray-200', 'text-gray-700');
             }
-
-            debouncedSave();
         }
 
-        function addGoal(containerId, category) {
-            addGoalWithData(containerId, category, '', false);
-        }
-
-        function addGoalWithData(containerId, category, text, done) {
-            const container = document.getElementById(containerId);
-            const div = document.createElement('div');
-            div.className = 'flex items-center gap-2 mb-2 goal-item';
-            div.innerHTML = `
-                <input type="checkbox" class="rounded" ${done ? 'checked' : ''} onchange="debouncedSave()">
-                <input type="text" value="${text}" placeholder="Add goal..." class="flex-1 text-sm border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none py-1" oninput="debouncedSave()">
-                <button onclick="this.parentElement.remove(); debouncedSave();" class="text-gray-400 hover:text-red-500 text-xs">✕</button>
-            `;
-            container.appendChild(div);
-        }
-
-        function addMonthlyGoal() {
-            addMonthlyGoalWithData('', false, 'Coco');
-        }
-
-        function addMonthlyGoalWithData(text, done, category) {
-            const container = document.getElementById('feb-goals');
-            const div = document.createElement('div');
-            div.className = 'flex items-center gap-2 mb-2 goal-item';
-            div.innerHTML = `
-                <input type="checkbox" class="rounded" ${done ? 'checked' : ''} onchange="debouncedSave()">
-                <input type="text" value="${text}" placeholder="Add February goal..." class="flex-1 text-sm border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none py-1" oninput="debouncedSave()">
-                <select class="text-xs border rounded px-2 py-1" onchange="debouncedSave()">
-                    <option ${category === 'Coco' ? 'selected' : ''}>Coco</option>
-                    <option ${category === 'Content' ? 'selected' : ''}>Content</option>
-                    <option ${category === 'BV' ? 'selected' : ''}>BV</option>
-                </select>
-                <button onclick="this.parentElement.remove(); debouncedSave();" class="text-gray-400 hover:text-red-500 text-xs">✕</button>
-            `;
-            container.appendChild(div);
-        }
-
-        // ==================== TABS ====================
-        function showTab(tab) {
-            ['goals', 'weekly', 'trends', 'review'].forEach(t => {
-                document.getElementById('content-' + t).classList.add('hidden');
-                document.getElementById('tab-' + t).classList.remove('tab-active');
-                document.getElementById('tab-' + t).classList.add('text-gray-500');
-            });
-            document.getElementById('content-' + tab).classList.remove('hidden');
-            document.getElementById('tab-' + tab).classList.add('tab-active');
-            document.getElementById('tab-' + tab).classList.remove('text-gray-500');
-            
-            if (tab === 'trends') initCharts();
-        }
-
-        // ==================== CHARTS ====================
-        let chartsInitialized = false;
-        function initCharts() {
-            if (chartsInitialized) return;
-            chartsInitialized = true;
-
-            const weeks = ['W1', 'W2', 'W3', 'W4', 'W5', 'W6'];
-            
-            new Chart(document.getElementById('mrrChart'), {
-                type: 'line',
-                data: {
-                    labels: weeks,
-                    datasets: [{
-                        label: 'MRR ($K)',
-                        data: [85, 87, 89, 91, 93, null],
-                        borderColor: '#3b82f6',
-                        tension: 0.3
-                    }]
-                },
-                options: { responsive: true, plugins: { legend: { display: false } } }
-            });
-
-            new Chart(document.getElementById('customerChart'), {
-                type: 'bar',
-                data: {
-                    labels: weeks,
-                    datasets: [
-                        { label: 'New', data: [12, 15, 8, 14, 11, null], backgroundColor: '#22c55e' },
-                        { label: 'Churned', data: [3, 2, 4, 2, 3, null], backgroundColor: '#ef4444' }
-                    ]
-                },
-                options: { responsive: true, scales: { x: { stacked: false } } }
-            });
-
-            new Chart(document.getElementById('newsletterChart'), {
-                type: 'line',
-                data: {
-                    labels: weeks,
-                    datasets: [{
-                        label: 'Subscribers',
-                        data: [5050, 5070, 5090, 5100, 5107, null],
-                        borderColor: '#8b5cf6',
-                        tension: 0.3
-                    }]
-                },
-                options: { responsive: true, plugins: { legend: { display: false } } }
-            });
-
-            new Chart(document.getElementById('contentChart'), {
-                type: 'bar',
-                data: {
-                    labels: weeks,
-                    datasets: [{
-                        label: 'LinkedIn Views (K)',
-                        data: [45, 52, 38, 61, 55, null],
-                        backgroundColor: '#0077b5'
-                    }]
-                },
-                options: { responsive: true, plugins: { legend: { display: false } } }
-            });
-        }
-
-        // ==================== ACTIONS ====================
-        function openInSheets() {
-            window.open('https://docs.google.com/spreadsheets/d/1jvP_4KX3JT-hVS85Q-FXR8-F_MHJtvaRY5z2ZJrdzwI/edit', '_blank');
-        }
-
+        // Refresh data
         function refreshData() {
-            alert('Data refreshed from local storage. Weekly auto-update runs Sundays at 5 PM ET.');
+            document.getElementById('lastSync').textContent = new Date().toLocaleString();
+            alert('Data refreshed! Connect to live APIs for real-time updates.');
         }
 
-        function saveWeeklyMetrics() {
-            saveAllData();
-            alert('Weekly metrics saved locally! Ajax will sync to Google Sheets on Sunday.');
-        }
-
-        function saveWeeklyReview() {
-            saveAllData();
-            alert('Weekly review saved locally! Ajax will create a Google Doc on Sunday.');
-        }
-
-        // ==================== AUTO-SAVE ====================
-        document.addEventListener('input', function(e) {
-            if (e.target.classList.contains('metric-input')) {
-                debouncedSave();
-            }
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('lastSync').textContent = new Date().toLocaleString();
         });
-
-        // ==================== INIT ====================
-        const now = new Date();
-        document.getElementById('currentWeek').textContent = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' Week';
-        checkAuth();
     </script>
 </body>
 </html>
