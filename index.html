@@ -48,7 +48,7 @@
     <main class="max-w-6xl mx-auto px-4 py-4 pb-16">
 
         <!-- OVERVIEW TAB -->
-        <div id="content-overview">
+        <div id="section-overview">
             <!-- Three Pillars Summary -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 
@@ -62,10 +62,10 @@
                         <div>
                             <div class="flex justify-between text-sm mb-1">
                                 <span class="text-gray-600">ARR → $2M</span>
-                                <span class="font-medium" id="arr-progress">$1M</span>
+                                <span class="font-medium" id="arr-progress">$744K</span>
                             </div>
                             <div class="h-2 bg-gray-200 rounded-full">
-                                <div id="arr-bar" class="h-2 bg-blue-500 rounded-full progress-bar" style="width: 50%"></div>
+                                <div id="arr-bar" class="h-2 bg-blue-500 rounded-full progress-bar" style="width: 37%"></div>
                             </div>
                         </div>
                         <div>
@@ -90,19 +90,19 @@
                         <div>
                             <div class="flex justify-between text-sm mb-1">
                                 <span class="text-gray-600">Newsletter</span>
-                                <span class="font-medium" id="overview-newsletter">3.6K/20K</span>
+                                <span class="font-medium" id="overview-newsletter">5.1K/20K</span>
                             </div>
                             <div class="h-2 bg-gray-200 rounded-full">
-                                <div class="h-2 bg-purple-500 rounded-full" style="width: 18%"></div>
+                                <div class="h-2 bg-purple-500 rounded-full" style="width: 25%"></div>
                             </div>
                         </div>
                         <div>
                             <div class="flex justify-between text-sm mb-1">
                                 <span class="text-gray-600">LinkedIn</span>
-                                <span class="font-medium">39K/50K</span>
+                                <span class="font-medium">40K/50K</span>
                             </div>
                             <div class="h-2 bg-gray-200 rounded-full">
-                                <div class="h-2 bg-purple-500 rounded-full" style="width: 78%"></div>
+                                <div class="h-2 bg-purple-500 rounded-full" style="width: 80%"></div>
                             </div>
                         </div>
                     </div>
@@ -133,27 +133,27 @@
                 <h3 class="font-semibold text-gray-700 mb-3">📈 This Week's Highlights</h3>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                     <div class="p-3 bg-gray-50 rounded-lg">
-                        <p class="text-2xl font-bold text-blue-600" id="stat-arr">$1M</p>
+                        <p class="text-2xl font-bold text-blue-600" id="stat-arr">$744K</p>
                         <p class="text-xs text-gray-500">Current ARR</p>
                     </div>
                     <div class="p-3 bg-gray-50 rounded-lg">
-                        <p class="text-2xl font-bold text-purple-600" id="stat-subs">3,614</p>
+                        <p class="text-2xl font-bold text-purple-600" id="stat-subs">5,052</p>
                         <p class="text-xs text-gray-500">Newsletter Subs</p>
                     </div>
                     <div class="p-3 bg-gray-50 rounded-lg">
-                        <p class="text-2xl font-bold text-purple-600">39.9%</p>
+                        <p class="text-2xl font-bold text-purple-600">35.97%</p>
                         <p class="text-xs text-gray-500">Avg Open Rate</p>
                     </div>
                     <div class="p-3 bg-gray-50 rounded-lg">
-                        <p class="text-2xl font-bold text-green-600">154</p>
-                        <p class="text-xs text-gray-500">Total Posts</p>
+                        <p class="text-2xl font-bold text-green-600">255K</p>
+                        <p class="text-xs text-gray-500">LI Views This Week</p>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- COCO AI TAB -->
-        <div id="content-coco" class="hidden">
+        <div id="section-coco" class="hidden">
             <div class="card p-4 mb-4">
                 <h2 class="text-lg font-bold text-gray-900 mb-4">🏢 Coco AI - 2026 Goals</h2>
                 
@@ -206,7 +206,7 @@
         </div>
 
         <!-- CONTENT TAB -->
-        <div id="content-content" class="hidden">
+        <div id="section-content" class="hidden">
             <!-- Sub Navigation -->
             <div class="flex gap-2 mb-4 overflow-x-auto">
                 <button onclick="showContentTab('all')" id="subtab-all" class="px-3 py-1.5 text-sm rounded-full bg-purple-500 text-white subtab-active">All</button>
@@ -217,7 +217,7 @@
             </div>
 
             <!-- All Content Overview -->
-            <div id="content-all">
+            <div id="subsection-all">
                 <div class="grid grid-cols-2 gap-3 mb-4">
                     <div class="card p-3">
                         <h4 class="font-semibold text-sm text-gray-700 mb-2">📧 Newsletter</h4>
@@ -266,7 +266,7 @@
             </div>
 
             <!-- Newsletter Detail -->
-            <div id="content-newsletter" class="hidden">
+            <div id="subsection-newsletter" class="hidden">
                 <div class="card p-4 mb-4">
                     <h3 class="font-bold text-gray-900 mb-4">📧 Newsletter Performance</h3>
                     
@@ -312,7 +312,7 @@
             </div>
 
             <!-- LinkedIn Detail -->
-            <div id="content-linkedin" class="hidden">
+            <div id="subsection-linkedin" class="hidden">
                 <div class="card p-4">
                     <h3 class="font-bold text-gray-900 mb-4">💼 LinkedIn Performance</h3>
                     
@@ -334,7 +334,7 @@
             </div>
 
             <!-- Twitter Detail -->
-            <div id="content-twitter" class="hidden">
+            <div id="subsection-twitter" class="hidden">
                 <div class="card p-4">
                     <h3 class="font-bold text-gray-900 mb-4">🐦 Twitter Performance</h3>
                     
@@ -358,7 +358,7 @@
             </div>
 
             <!-- YouTube Detail -->
-            <div id="content-youtube" class="hidden">
+            <div id="subsection-youtube" class="hidden">
                 <div class="card p-4">
                     <h3 class="font-bold text-gray-900 mb-4">🎬 YouTube Performance</h3>
                     
@@ -381,7 +381,7 @@
         </div>
 
         <!-- INVESTMENTS TAB -->
-        <div id="content-invest" class="hidden">
+        <div id="section-invest" class="hidden">
             <div class="card p-4">
                 <h2 class="text-lg font-bold text-gray-900 mb-4">💰 Investments</h2>
                 
@@ -420,24 +420,31 @@
     </footer>
 
     <script>
+        // Main tabs
+        const mainTabs = ['overview', 'coco', 'content', 'invest'];
+        // Content sub-tabs (inside content section)
+        const contentSubTabs = ['all', 'newsletter', 'linkedin', 'twitter', 'youtube'];
+
         // Tab Navigation
         function showTab(tabName) {
-            // Hide all content
-            document.querySelectorAll('[id^="content-"]').forEach(el => {
-                if (el.id.startsWith('content-') && !el.id.includes('content-all') && !el.id.includes('content-newsletter') && !el.id.includes('content-linkedin') && !el.id.includes('content-twitter') && !el.id.includes('content-youtube')) {
-                    el.classList.add('hidden');
+            // Hide all main tab content sections
+            mainTabs.forEach(name => {
+                const el = document.getElementById('section-' + name);
+                if (el) el.classList.add('hidden');
+            });
+            
+            // Remove active from all main tabs
+            mainTabs.forEach(name => {
+                const tab = document.getElementById('tab-' + name);
+                if (tab) {
+                    tab.classList.remove('tab-active');
+                    tab.classList.add('text-gray-500');
                 }
             });
             
-            // Remove active from all tabs
-            document.querySelectorAll('[id^="tab-"]').forEach(el => {
-                el.classList.remove('tab-active');
-                el.classList.add('text-gray-500');
-            });
-            
             // Show selected content
-            const content = document.getElementById('content-' + tabName);
-            if (content) content.classList.remove('hidden');
+            const section = document.getElementById('section-' + tabName);
+            if (section) section.classList.remove('hidden');
             
             // Activate tab
             const tab = document.getElementById('tab-' + tabName);
@@ -445,13 +452,18 @@
                 tab.classList.add('tab-active');
                 tab.classList.remove('text-gray-500');
             }
+
+            // If switching to content tab, ensure sub-tab is shown
+            if (tabName === 'content') {
+                showContentTab('all');
+            }
         }
 
         // Content Sub-tab Navigation
         function showContentTab(subTab) {
             // Hide all content sub-sections
-            ['all', 'newsletter', 'linkedin', 'twitter', 'youtube'].forEach(name => {
-                const el = document.getElementById('content-' + name);
+            contentSubTabs.forEach(name => {
+                const el = document.getElementById('subsection-' + name);
                 if (el) el.classList.add('hidden');
                 
                 const btn = document.getElementById('subtab-' + name);
@@ -462,7 +474,7 @@
             });
             
             // Show selected
-            const content = document.getElementById('content-' + subTab);
+            const content = document.getElementById('subsection-' + subTab);
             if (content) content.classList.remove('hidden');
             
             const btn = document.getElementById('subtab-' + subTab);
@@ -481,6 +493,7 @@
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('lastSync').textContent = new Date().toLocaleString();
+            showTab('overview');
         });
     </script>
 </body>
